@@ -1,0 +1,56 @@
+version: "3.8"
+
+# ══════════════════════════════════════════════════════════════════
+#  Mediastarr v3 — docker-compose.yml
+#
+#  Beim ersten Start: http://localhost:7979  → Setup-Wizard öffnet
+#  sich automatisch. API Keys dort eintragen & speichern.
+#  Die Konfiguration wird in ./data/config.json gespeichert.
+# ══════════════════════════════════════════════════════════════════
+
+services:
+  mediastarr:
+    build: .
+    # Oder fertiges Image:
+    # image: ghcr.io/yourname/mediastarr:3.0
+    container_name: mediastarr
+    restart: unless-stopped
+
+    ports:
+      - "7979:7979"     # Dashboard & API
+
+    volumes:
+      # Persistente Konfiguration — WICHTIG! Ohne dieses Volume
+      # geht der Setup-Wizard bei jedem Neustart erneut auf.
+      - ./data:/data
+
+    environment:
+      # ── Optional: Env-Vars überschreiben den Setup-Wizard ──────
+      # Wenn BEIDE API Keys gesetzt sind, wird Setup übersprungen.
+      # Für den normalen Betrieb den Setup-Wizard nutzen.
+      - SONARR_API_KEY=${SONARR_API_KEY:-}
+      - RADARR_API_KEY=${RADARR_API_KEY:-}
+
+      # ── Erweiterte Optionen ─────────────────────────────────────
+      - HUNT_MISSING_DELAY=900      # Sekunden zwischen Missing-Suchen
+      - HUNT_UPGRADE_DELAY=1800     # Sekunden zwischen Upgrade-Suchen
+      - MAX_SEARCHES_PER_RUN=10     # Max. Items pro Zyklus
+      - DRY_RUN=false               # true = nur simulieren
+      - AUTO_START=true             # Automatisch nach Setup starten
+      - LANGUAGE=de                 # de | en (auch im UI umschaltbar)
+
+    # ── Netzwerk ────────────────────────────────────────────────────
+    # Option A: Gleiches Docker-Netz wie Sonarr/Radarr
+    networks:
+      - arr-network
+
+    # Option B: Zugriff via Host-IP (kein gemeinsames Netz)
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    # Dann im Setup-Wizard: http://host.docker.internal:8989
+
+networks:
+  arr-network:
+    external: true
+    # Kein bestehendes Netzwerk?  →  auskommentieren und ersetzen durch:
+    # driver: bridge
