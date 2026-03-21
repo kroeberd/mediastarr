@@ -1,3 +1,6 @@
+<img width="1919" height="892" alt="grafik" src="https://github.com/user-attachments/assets/e4b03ac9-29a6-478a-9da5-7a6d5b0449d5" />
+
+
 # 🎯 Mediastarr
 
 **Automated media search for Sonarr & Radarr** — finds missing content and quality upgrades on a configurable schedule. Web dashboard, first-run wizard, SQLite history, multi-instance support, Discord notifications and 3 themes.
