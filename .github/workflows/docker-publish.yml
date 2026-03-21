@@ -74,4 +74,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: kroeberd/mediastarr
           readme-filepath: ./README.md
-          short-description: "Automated media search for Sonarr & Radarr — multi-instance, Discord, SQLite, DE/EN"
+          short-description: "Automated media search for Sonarr & Radarr — multi-instance, Discord, SQLite, DE/EN | mediastarr.de"

@@ -6,6 +6,7 @@
 
 **EN** · [DE](#de)
 
+[![Website](https://img.shields.io/badge/Website-mediastarr.de-ff6b2b?logo=googlechrome&logoColor=white)](https://mediastarr.de/)
 [![GitHub](https://img.shields.io/badge/GitHub-kroeberd%2Fmediastarr-orange?logo=github)](https://github.com/kroeberd/mediastarr)
 [![Docker Hub](https://img.shields.io/docker/pulls/kroeberd/mediastarr?label=Docker%20Pulls&logo=docker)](https://hub.docker.com/r/kroeberd/mediastarr)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
