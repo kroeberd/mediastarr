@@ -1,6 +1,6 @@
 # Changelog
 
-## [6.0.3] — 2025
+## [6.0.3]
 
 ### Improved (from community fork review)
 - `db.py`: `threading.Lock()` → `threading.RLock()` (prevents deadlock on recursive calls)
@@ -18,14 +18,14 @@
 - `setup.html`: Step counter corrected to "Step 1 of 4"
 - `README.md`: Instance URL examples use `[IP]` instead of Docker hostnames
 
-## [6.0.2] — 2025
+## [6.0.2]
 
 ### Fixed
 - Setup wizard: validation error "#2 () Name: Name fehlt" when clicking Finish Setup on Discord step — client-side validation now runs before server call and shows errors directly in the visible pane
 - New instances added via "+ Add instance" now default to name "Sonarr" or "Radarr" (type-dependent) instead of empty string, reducing chance of missing name
 - Backend validation error messages now respect selected language (DE/EN)
 
-## [6.0.1] — 2025
+## [6.0.1]
 
 ### Fixed
 - Setup wizard: "Finish Setup" button stuck when skipping Discord step — error element was in wrong pane (Pane 2) causing button to stay disabled and page to not advance
@@ -33,7 +33,7 @@
 - Button text reset now language-aware (was hardcoded German)
 - Catch block now shows user-facing error message in both DE and EN
 
-## [6.0.0] — 2025
+## [6.0.0]
 
 ### Added
 - Multi-instance: any combination of Sonarr/Radarr, fully optional
