@@ -7,6 +7,7 @@ searched_at, result, search_count, last_changed_at
 """
 import sqlite3
 import threading
+from typing import Optional
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -18,6 +19,11 @@ _db_path = None
 def _require_init():
     if _conn is None:
         raise RuntimeError("Database is not initialized. Call init(db_path) first.")
+
+
+def _get_conn():
+    _require_init()
+    return _conn
 
 def init(db_path: Path):
     global _conn, _db_path
@@ -156,7 +162,7 @@ def count_today() -> int:
     with _lock:
         row = _conn.execute("""
             SELECT COUNT(*) AS n FROM search_history
-            WHERE searched_at LIKE ? AND result IN ('triggered', 'dry_run')
+            WHERE searched_at LIKE ? AND result IN ('triggered', 'dry_run', 'downloaded')
         """, (today + "%",)).fetchone()
     return row["n"] if row else 0
 

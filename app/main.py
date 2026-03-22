@@ -28,6 +28,9 @@ except ImportError:
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.config["SECRET_KEY"] = os.environ.get("MEDIASTARR_SESSION_SECRET") or secrets.token_hex(32)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"]   = os.environ.get("MEDIASTARR_SESSION_SECURE","").strip().lower() in {"1","true","yes","on"}
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -233,7 +236,7 @@ MSGS = {
         "skipped_offline":  "Übersprungen – Offline oder deaktiviert",
         "auto_start":       "Hunt-Schleife gestartet",
         "app_start":        "Mediastarr v6.2.0 gestartet",
-        "setup_required":   "Einrichtung erforderlich – http://localhost:7979/setup",
+        "setup_required":   "Einrichtung erforderlich – {setup_url}",
         "missing":          "Fehlend",
         "upgrade":          "Upgrade",
         "error":            "Fehler",
@@ -247,7 +250,7 @@ MSGS = {
         "skipped_offline":  "Skipped – offline or disabled",
         "auto_start":       "Hunt loop started",
         "app_start":        "Mediastarr v6.2.0 started",
-        "setup_required":   "Setup required – http://localhost:7979/setup",
+        "setup_required":   "Setup required – {setup_url}",
         "missing":          "Missing",
         "upgrade":          "Upgrade",
         "error":            "Error",
@@ -260,6 +263,14 @@ def msg(key: str, **kwargs) -> str:
     tmpl = MSGS.get(lang, MSGS["en"]).get(key, key)
     try: return tmpl.format(**kwargs)
     except: return tmpl
+
+def setup_url_for_logs() -> str:
+    """Return externally reachable setup URL for startup logs."""
+    public_url = os.environ.get("MEDIASTARR_PUBLIC_URL","").strip().rstrip("/")
+    if public_url: return f"{public_url}/setup"
+    public_port = os.environ.get("MEDIASTARR_PUBLIC_PORT","").strip()
+    if public_port.isdigit(): return f"http://localhost:{public_port}/setup"
+    return "http://localhost:7979/setup"
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
@@ -275,7 +286,7 @@ def make_id() -> str:
 def fresh_inst_stats() -> dict:
     return {"missing_found":0,"missing_searched":0,"upgrades_found":0,
             "upgrades_searched":0,"skipped_cooldown":0,"skipped_daily":0,
-            "status":"unknown","version":"?"}
+            "status":"unknown","version":"?","skipped_unreleased":0}
 
 def now_local() -> datetime:
     """Current time in configured timezone."""
@@ -346,7 +357,12 @@ def load_config() -> dict:
 
 def save_config(cfg: dict):
     tmp = CFG_FILE.with_suffix(".tmp")
-    tmp.write_text(json.dumps(cfg, indent=2)); tmp.replace(CFG_FILE)
+    tmp.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    tmp.replace(CFG_FILE)
+    try:
+        import os as _os; _os.chmod(CFG_FILE, 0o600)
+    except OSError:
+        pass
 
 def _bootstrap_host() -> str:
     """Return best-effort host/IP for local arr fallback URLs."""
@@ -408,6 +424,40 @@ def validate_url(url: str):
     if p.scheme not in ALLOWED_SCHEMES: return False,f"Schema '{p.scheme}' nicht erlaubt"
     if not p.hostname: return False,"Kein Hostname"
     return True,""
+
+def is_private_host(hostname: str) -> bool:
+    """Return True if hostname resolves only to private/loopback/link-local addresses."""
+    host = hostname.strip().lower()
+    if not host: return False
+    if host == "localhost" or "." not in host: return True
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback or ip.is_link_local
+    except ValueError:
+        pass
+    try:
+        resolved = {info[4][0] for info in socket.getaddrinfo(host, None)}
+    except OSError:
+        return False
+    if not resolved: return False
+    try:
+        return all(
+            ipaddress.ip_address(addr).is_private or
+            ipaddress.ip_address(addr).is_loopback or
+            ipaddress.ip_address(addr).is_link_local
+            for addr in resolved
+        )
+    except ValueError:
+        return False
+
+def validate_internal_service_url(url: str):
+    """validate_url + SSRF check: target must be private/internal."""
+    ok, err = validate_url(url)
+    if not ok: return False, err
+    parsed = urlparse(url)
+    if not parsed.hostname or not is_private_host(parsed.hostname):
+        return False, "Ziel muss auf ein lokales oder internes System zeigen"
+    return True, ""
 
 def validate_api_key(key: str):
     if not key or not isinstance(key,str): return False,"API Key fehlt"
@@ -497,6 +547,33 @@ def jittered_delay(base_sec: int) -> tuple[int, int]:
 def daily_limit_reached() -> bool:
     limit = CONFIG.get("daily_limit", 0)
     return limit > 0 and db.count_today() >= limit
+
+def _parse_release_dt(raw):
+    """Parse a release date from various Arr field formats."""
+    if raw is None: return None
+    s = str(raw).strip()
+    if not s: return None
+    if len(s) >= 10:
+        try: return datetime.fromisoformat(s[:10])
+        except Exception: pass
+    try: return datetime.fromisoformat(s.replace("Z","+00:00"))
+    except Exception: pass
+    if len(s) >= 4 and s[:4].isdigit():
+        try: return datetime(int(s[:4]), 1, 1)
+        except Exception: return None
+    return None
+
+def _pick_release_dt(record: dict, *keys):
+    for key in keys:
+        dt = _parse_release_dt(record.get(key))
+        if dt is not None: return dt
+    return None
+
+def _is_released(release_dt) -> bool:
+    """True if release_dt is in the past or unknown."""
+    if release_dt is None: return True
+    try: return release_dt.date() <= datetime.utcnow().date()
+    except Exception: return True
 
 def should_search(iid:str, item_type:str, item_id:int):
     if daily_limit_reached(): return False, "daily_limit"
@@ -930,7 +1007,7 @@ def api_setup_ping():
     itype = safe_str(d.get("type",""), 10)
     if itype not in ALLOWED_TYPES: return jsonify({"ok":False,"msg":"Unbekannter Typ"}),400
     url = safe_str(d.get("url",""), URL_MAX_LEN)
-    ok, err = validate_url(url)
+    ok, err = validate_internal_service_url(url)
     if not ok: return jsonify({"ok":False,"msg":f"URL ungültig: {err}"}),400
     key = safe_str(d.get("api_key",""), 128)
     ok, err = validate_api_key(key)
@@ -1200,13 +1277,18 @@ def api_history_stats():
 @app.route("/api/history/clear", methods=["POST"])
 @_api_auth_required
 def api_history_clear():
-    n=db.clear_all(); log_act("System","DB geleert",f"{n} Einträge","warning")
+    n = db.clear_all()
+    is_de = CONFIG.get("language","de") == "de"
+    log_act("System", "DB geleert" if is_de else "DB cleared",
+            f"{n} {'Einträge' if is_de else 'entries'}", "warning")
     return jsonify({"ok":True,"removed":n})
 
 @app.route("/api/history/clear/<inst_id>", methods=["POST"])
 @_api_auth_required
 def api_history_clear_inst(inst_id:str):
-    n=db.clear_service(inst_id); log_act("System",f"DB geleert ({inst_id})",f"{n}","warning")
+    n = db.clear_service(inst_id)
+    is_de = CONFIG.get("language","de") == "de"
+    log_act("System", f"DB geleert ({inst_id})" if is_de else f"DB cleared ({inst_id})", str(n), "warning")
     return jsonify({"ok":True,"removed":n})
 
 # ── Timezone helper ───────────────────────────────────────────────────────────
@@ -1300,7 +1382,7 @@ def _do_startup():
             hunt_thread.start()
             log_act("System", msg("auto_start"), "", "info")
     else:
-        log_act("System", msg("setup_required"), "", "warning")
+        log_act("System", msg("setup_required", setup_url=setup_url_for_logs()), "", "warning")
 @app.before_request
 def _before_request():
     _do_startup()

@@ -2,21 +2,31 @@
 
 ## [6.2.0]
 
-### Security
-- Fixed 8 API routes missing `@_api_auth_required` decorator (instances PATCH/DELETE/ping, history/clear/{id}, discord/stats, timezones, instances GET/POST) — only relevant when `MEDIASTARR_PASSWORD` is set
-
 ### Added
-- **IMDb minimum rating filter**: skip content below a configurable IMDb score (0 = disabled). Applies to both missing content and upgrade searches in Sonarr and Radarr. Unrated items (IMDb = 0) are always included.
-- **Upgrade target resolution**: only trigger upgrade searches when the current file quality is below the configured target (e.g. stop at Bluray-1080p, skip anything already at or above). Supported resolutions: SDTV, WEBDL/Bluray 480p/720p/1080p/2160p, HDTV 720p/1080p.
-- Both filters appear as a new **Filter** section in Settings → General between Search Behavior and Interval & Jitter.
-- **Homepage (mediastarr.de)**: added German/English language toggle, updated feature list, improved layout.
+- Settings → Filter: IMDb minimum rating — only search content with IMDb ≥ threshold (0 = off, applies to Sonarr series and Radarr movies)
+- Settings → Filter: Target resolution for upgrades — skip upgrade search if current quality already meets or exceeds target (WEB-DL 720p … Bluray 2160p)
+- `_parse_release_dt()` / `_is_released()` — unreleased episodes and movies are now skipped automatically
+- `MEDIASTARR_PUBLIC_URL` / `MEDIASTARR_PUBLIC_PORT` env vars — startup log shows the actual externally reachable setup URL
+- `MEDIASTARR_SESSION_SECURE` env var — enables Secure flag on session cookie for HTTPS deployments
 
-### Technical
-- `_res_rank()` helper for fuzzy resolution comparison (handles Sonarr/Radarr quality name variations)
-- `_imdb_rating()` helper extracts IMDb rating from Sonarr/Radarr API response
-- New config keys: `imdb_min_rating` (float, default 0.0) and `upgrade_target_resolution` (string, default "")
-- Both keys validated and exposed via `/api/state` and `/api/config`
+### Changed
+- Search intervals changed from seconds to minutes in the UI (stored as seconds internally for backward compatibility)
+- Default missing interval: 15 min → 30 min
+- Default upgrade interval: 30 min → 60 min
+- Minimum interval: 15 minutes (unchanged)
+- Dashboard overview now shows interval in minutes
 
+### Security
+- Session cookies now set `HttpOnly`, `SameSite=Lax`, and optionally `Secure`
+- Setup connection test now validates that Sonarr/Radarr URLs resolve to private/internal hosts only (SSRF protection)
+- `config.json` file permissions set to 0600 after every save
+- Setup log message uses dynamic URL instead of hardcoded `localhost:7979`
+
+### Improved
+- Project homepage fully rewritten with DE/EN language switcher
+- `db.py`: `_get_conn()` helper + `Optional` type annotations
+- History clear log messages now respect UI language (DE/EN)
+- All API routes verified to have auth protection when `MEDIASTARR_PASSWORD` is set
 ## [6.1.2]
 
 ### Fixed
