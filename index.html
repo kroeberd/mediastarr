@@ -30,9 +30,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5vw;height:64px;di
 .lang-btn:hover,.lang-btn.active{border-color:rgba(255,107,43,.4);color:var(--acc)}
 
 /* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;position:relative;z-index:1}
-.hero::after{content:'';position:absolute;top:20%;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(255,107,43,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border:1px solid rgba(255,107,43,.3);border-radius:100px;background:rgba(255,107,43,.07);color:var(--acc);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px;animation:fadeUp .6s ease both;position:relative;z-index:2}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;position:relative}
+.hero::after{content:'';position:absolute;top:40%;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse,rgba(255,107,43,.06) 0%,transparent 65%);pointer-events:none;z-index:-1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border:1px solid rgba(255,107,43,.3);border-radius:100px;background:rgba(255,107,43,.07);color:var(--acc);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px;animation:fadeUp .6s ease both}
 .hero-badge span{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hero-title{font-family:var(--disp);font-size:clamp(52px,8vw,96px);font-weight:800;line-height:1.02;letter-spacing:-2px;color:#fff;margin-bottom:24px;animation:fadeUp .7s .1s ease both}
@@ -195,10 +195,7 @@ span[data-lang].show{display:inline}
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-badge"><span></span>
-    <span data-lang="en" class="show">v6.2.0 — Open Source</span>
-    <span data-lang="de">v6.2.0 — Open Source</span>
-  </div>
+  <div class="hero-badge"><span></span>v6.2.0 — Open Source</div>
   <h1 class="hero-title">
     <span data-lang="en" class="show">Hunt what's<br><span style="color:var(--acc)">missing.</span></span>
     <span data-lang="de">Such was<br><span style="color:var(--acc)">fehlt.</span></span>
