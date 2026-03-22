@@ -1374,6 +1374,7 @@ async function resetSetup() {
 function renderSettingsInstances() {
   const el = document.getElementById('settings-inst-list');
   if (!el) return;
+  const isDE4 = currentLang === 'de';
   if (!appState.instances) {
     el.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:12px;padding:16px">${currentLang==='de'?'Lade…':'Loading…'}</div>`;
     return;
