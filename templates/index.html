@@ -277,9 +277,12 @@
       flex-shrink: 0; position: relative; z-index: 60; pointer-events: all;
     }
     .hamburger span { display: block; width: 16px; height: 2px; background: var(--text); border-radius: 2px; transition: all .2s; }
+    .hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     .hamburger:hover { border-color: var(--accent); }
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      z-index: 48; backdrop-filter: blur(3px); }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      z-index: 48; backdrop-filter: blur(2px); cursor: pointer; }
     .sidebar-overlay.open { display: block; }
     /* ── Responsive ── */
     @media (max-width: 900px) {
@@ -323,7 +326,7 @@
         </svg>
         <div>
           <div class="logo-name">Media<span>starr</span></div>
-          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.3.3</span></div>
+          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.3.4</span></div>
         </div>
       </div>
     </div>
@@ -368,7 +371,7 @@
         <div class="lang-btn" onclick="setLang('en')" id="lang-en">🇬🇧 EN</div>
       </div>
       <button class="btn" style="width:100%;font-size:10px;padding:5px;margin-bottom:6px;color:var(--muted2)" onclick="resetSetup()" data-i18n="btn_reset_setup">⚙ Setup zurücksetzen</button>
-      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.3.3</span></a></div>
+      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.3.4</span></a></div>
     </div>
   </aside>
 
@@ -1398,7 +1401,7 @@ function renderLog(entries, containerId) {
     const svcClass = ['sonarr','radarr','system'].find(s => svc.includes(s)) || 'system';
     const txt = e.action + (e.item ? ' · ' + e.item : '');
     return `<div class="log-row">
-      <span class="log-ts">${e.ts}</span>
+      <span class="log-ts">${e.ts.slice(0,5)}</span>
       <span class="log-svc ${svcClass}">${e.service.length > 9 ? e.service.slice(0,9)+'…' : e.service}</span>
       <span class="log-action ${e.status}" title="${txt}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${txt}</span>
     </div>`;
@@ -2166,18 +2169,28 @@ function selectTimezone(tz) {
 }
 
 // Mobile sidebar
+let _sidebarOpen = false;
 function toggleSidebar() {
-  document.querySelector('.sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
+  _sidebarOpen = !_sidebarOpen;
+  document.querySelector('.sidebar').classList.toggle('open', _sidebarOpen);
+  document.getElementById('sidebar-overlay').classList.toggle('open', _sidebarOpen);
+  document.getElementById('hamburger-btn').setAttribute('aria-expanded', _sidebarOpen);
 }
 function closeSidebar() {
+  _sidebarOpen = false;
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
+  document.getElementById('hamburger-btn').setAttribute('aria-expanded', 'false');
 }
-// Close sidebar when navigating
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', () => { if (window.innerWidth <= 900) closeSidebar(); });
-});
+// Close sidebar on nav-item click (mobile only) — use capture to fire before showPage
+document.addEventListener('click', e => {
+  if (window.innerWidth > 900) return;
+  if (e.target.closest('.nav-item') && !e.target.closest('.sidebar-bottom')) {
+    closeSidebar();
+  }
+}, true);
+// Prevent sidebar itself from closing when clicked
+document.querySelector('.sidebar')?.addEventListener('click', e => e.stopPropagation());
 
 // Init
 fetchState();

@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.3.4] — 2026-03-22
+
+### Fixed
+- Mobile sidebar closes immediately after opening — rewritten with explicit state variable, prevents event race condition
+- Mobile sidebar now has slide-in animation and hamburger morphs to ✕ when open
+- Activity log: timestamps now show HH:MM only instead of HH:MM:SS (cleaner on small screens)
+
 ## [6.3.3] — 2026-03-22
 
 ### Added
