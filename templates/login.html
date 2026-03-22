@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mediastarr — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090d;
+      --bg2: #0d0f17;
+      --surface: #12141e;
+      --border: #1c1f2e;
+      --muted: #6b708f;
+      --text: #dde1f5;
+      --accent: #ff6b2b;
+      --danger: #ff4d4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, rgba(255,107,43,0.12), transparent 35%), var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+    }
+    .card {
+      width: min(100%, 420px);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    .accent { height: 3px; background: linear-gradient(90deg, var(--accent), #ff9a68); }
+    .body { padding: 28px; }
+    h1 {
+      margin: 0 0 8px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 30px;
+      line-height: 1;
+    }
+    p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="password"]:focus { border-color: var(--accent); }
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover { background: #ff8c4f; }
+    .error {
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255,77,77,0.1);
+      border: 1px solid rgba(255,77,77,0.25);
+      color: var(--danger);
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <form class="card" method="post" action="/login">
+    <div class="accent"></div>
+    <div class="body">
+      <h1>Media<span style="color:var(--accent)">starr</span></h1>
+      <p>Dashboard access is protected. Enter the password configured with <code>MEDIASTARR_PASSWORD</code>.</p>
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="next" value="{{ next_path }}">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+      <button type="submit">Sign in →</button>
+    </div>
+  </form>
+</body>
+</html>

@@ -136,4 +136,16 @@
     Required="false"
     Mask="false">/data</Config>
 
+
+  <Config
+    Name="Dashboard Password"
+    Target="MEDIASTARR_PASSWORD"
+    Default=""
+    Mode=""
+    Description="Optional: if set, the Mediastarr dashboard and API require login. Browser write actions are CSRF-protected. Recommended when the WebUI is reachable beyond a trusted LAN."
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="true"></Config>
+
 </Container>

@@ -18,11 +18,16 @@ import os, re, json, time, logging, threading, requests, random, string, zoneinf
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
-from flask import Flask, render_template, jsonify, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect, session, url_for
 from collections import deque
-import db
+import secrets
+try:
+    from . import db
+except ImportError:
+    import db
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app.config["SECRET_KEY"] = os.environ.get("MEDIASTARR_SESSION_SECRET") or secrets.token_hex(32)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -201,7 +206,7 @@ MSGS = {
         "db_pruned":        "{n} abgelaufene Einträge bereinigt",
         "skipped_offline":  "Übersprungen – Offline oder deaktiviert",
         "auto_start":       "Hunt-Schleife gestartet",
-        "app_start":        "Mediastarr v6.0.3 gestartet",
+        "app_start":        "Mediastarr v6.1.0 gestartet",
         "setup_required":   "Einrichtung erforderlich – http://localhost:7979/setup",
         "missing":          "Fehlend",
         "upgrade":          "Upgrade",
@@ -215,7 +220,7 @@ MSGS = {
         "db_pruned":        "{n} expired entries pruned",
         "skipped_offline":  "Skipped – offline or disabled",
         "auto_start":       "Hunt loop started",
-        "app_start":        "Mediastarr v6.0.3 started",
+        "app_start":        "Mediastarr v6.1.0 started",
         "setup_required":   "Setup required – http://localhost:7979/setup",
         "missing":          "Missing",
         "upgrade":          "Upgrade",
@@ -773,16 +778,88 @@ def hunt_loop():
     STATE["running"] = False; STATE["next_run"] = None
 
 # ─── Flask Routes ─────────────────────────────────────────────────────────────
+
+# ─── Auth / CSRF ──────────────────────────────────────────────────────────────
+_PASSWORD = os.environ.get("MEDIASTARR_PASSWORD", "").strip()
+
+def _csrf_token() -> str:
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_hex(32)
+    return session["csrf_token"]
+
+def _check_csrf():
+    """Verify CSRF token on state-mutating browser requests."""
+    if not _PASSWORD: return  # no auth = no CSRF needed
+    token = (request.headers.get("X-CSRF-Token") or
+             request.form.get("csrf_token") or "")
+    if not secrets.compare_digest(token, _csrf_token()):
+        from flask import abort
+        abort(403, "CSRF token invalid")
+
+def _require_login():
+    """Redirect to login if password protection is enabled."""
+    if not _PASSWORD: return
+    if not session.get("authenticated"):
+        return redirect(url_for("login_page", next=request.path))
+
+def _login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        result = _require_login()
+        if result: return result
+        return f(*args, **kwargs)
+    return decorated
+
+def _api_auth_required(f):
+    """For API routes: return 401 JSON if not authenticated."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if _PASSWORD and not session.get("authenticated"):
+            return jsonify({"ok": False, "error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    next_path = request.args.get("next", "/")
+    error = None
+    if request.method == "POST":
+        # CSRF for login form itself
+        token = request.form.get("csrf_token", "")
+        if not secrets.compare_digest(token, _csrf_token()):
+            error = "Invalid request. Please try again."
+        elif _PASSWORD and secrets.compare_digest(
+                request.form.get("password", ""), _PASSWORD):
+            session["authenticated"] = True
+            session.permanent = True
+            return redirect(next_path or "/")
+        else:
+            error = "Incorrect password."
+    return render_template("login.html",
+                           csrf_token=_csrf_token(),
+                           next_path=next_path,
+                           error=error)
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    _check_csrf()
+    session.clear()
+    return redirect(url_for("login_page"))
+
 @app.route("/")
+@_login_required
 def index():
     if not CONFIG.get("setup_complete"): return redirect("/setup")
-    return render_template("index.html")
+    return render_template("index.html", csrf_token=_csrf_token())
 
 @app.route("/setup")
-def setup_page(): return render_template("setup.html")
+def setup_page(): return render_template("setup.html", csrf_token=_csrf_token())
 
 # ── Setup API ─────────────────────────────────────────────────────────────────
 @app.route("/api/setup/ping", methods=["POST"])
+@_api_auth_required
 def api_setup_ping():
     d = request.get_json(silent=True) or {}
     itype = safe_str(d.get("type",""), 10)
@@ -799,6 +876,7 @@ def api_setup_ping():
     except: return jsonify({"ok":False,"msg":"Verbindung fehlgeschlagen"})
 
 @app.route("/api/setup/complete", methods=["POST"])
+@_api_auth_required
 def api_setup_complete():
     d = request.get_json(silent=True) or {}
     instances = d.get("instances",[])
@@ -851,6 +929,7 @@ def api_setup_complete():
     return jsonify({"ok":True})
 
 @app.route("/api/setup/reset", methods=["POST"])
+@_api_auth_required
 def api_setup_reset():
     CONFIG["setup_complete"] = False; save_config(CONFIG); STOP_EVENT.set()
     return jsonify({"ok":True})
@@ -920,6 +999,7 @@ def api_instances_ping(inst_id:str):
 
 # ── Main API ──────────────────────────────────────────────────────────────────
 @app.route("/api/state")
+@_api_auth_required
 def api_state():
     today_n=db.count_today(); limit=CONFIG.get("daily_limit",0)
     instances_safe=[{k:v for k,v in i.items() if k!="api_key"} for i in CONFIG["instances"]]
@@ -958,6 +1038,7 @@ def api_state():
     })
 
 @app.route("/api/control", methods=["POST"])
+@_api_auth_required
 def api_control():
     global hunt_thread
     d=request.get_json(silent=True) or {}; action=d.get("action")
@@ -972,6 +1053,7 @@ def api_control():
     return jsonify({"ok":True})
 
 @app.route("/api/config", methods=["POST"])
+@_api_auth_required
 def api_config():
     d=request.get_json(silent=True)
     if d is None: return jsonify({"ok":False,"error":"Ungültiges JSON"}),400
@@ -1016,6 +1098,7 @@ def api_config():
 
 # ── History API ───────────────────────────────────────────────────────────────
 @app.route("/api/history")
+@_api_auth_required
 def api_history():
     svc=safe_str(request.args.get("service",""),40)
     only_cd=request.args.get("cooldown_only")=="1"
@@ -1030,11 +1113,13 @@ def api_history():
     return jsonify({"ok":True,"count":len(rows),"history":rows})
 
 @app.route("/api/history/stats")
+@_api_auth_required
 def api_history_stats():
     return jsonify({"ok":True,"total":db.total_count(),"today":db.count_today(),
                     "by_service":db.stats_by_service(),"by_year":db.year_stats()})
 
 @app.route("/api/history/clear", methods=["POST"])
+@_api_auth_required
 def api_history_clear():
     n=db.clear_all(); log_act("System","DB geleert",f"{n} Einträge","warning")
     return jsonify({"ok":True,"removed":n})
@@ -1059,6 +1144,7 @@ def api_timezones():
 
 # ── Discord test endpoint ─────────────────────────────────────────────────────
 @app.route("/api/discord/test", methods=["POST"])
+@_api_auth_required
 def api_discord_test():
     dc = CONFIG.get("discord", {})
     if not dc.get("webhook_url",""):
@@ -1089,7 +1175,7 @@ def api_discord_test():
     active = len([i for i in CONFIG["instances"] if i.get("enabled")])
     fields = [
         {"name": f_status,  "value": f_ok, "inline": True},
-        {"name": f_ver,     "value": "v6.0.3", "inline": True},
+        {"name": f_ver,     "value": "v6.1.0", "inline": True},
         {"name": f_inst,    "value": str(active), "inline": True},
         {"name": f_enabled, "value": enabled_text, "inline": False},
     ]

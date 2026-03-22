@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Mediastarr — Setup</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bricolage+Grotesque:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -653,6 +654,21 @@ function buildSummary() {
   addInstance({type:'sonarr', name:'Sonarr', url: defaultArrUrl('sonarr')});
 applyWizardLang();
 })();
+</script>
+
+<script>
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+const nativeFetch = window.fetch.bind(window);
+window.fetch = (resource, options = {}) => {
+  const request = new Request(resource, options);
+  const url = new URL(request.url, window.location.origin);
+  if (url.origin === window.location.origin && ['POST','PATCH','DELETE'].includes(request.method.toUpperCase())) {
+    const headers = new Headers(request.headers);
+    headers.set('X-CSRF-Token', CSRF_TOKEN);
+    return nativeFetch(new Request(request, { headers }));
+  }
+  return nativeFetch(request);
+};
 </script>
 </body>
 </html>

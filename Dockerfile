@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="Mediastarr"
 LABEL org.opencontainers.image.description="Automated missing-content and quality-upgrade search for Sonarr & Radarr"
-LABEL org.opencontainers.image.version="6.0"
+LABEL org.opencontainers.image.version="6.1.0"
 LABEL org.opencontainers.image.source="https://github.com/kroeberd/mediastarr"
 LABEL org.opencontainers.image.url="https://mediastarr.de/"
 LABEL org.opencontainers.image.licenses="MIT"
@@ -10,7 +10,8 @@ LABEL org.opencontainers.image.authors="kroeberd"
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir flask requests gunicorn
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/       ./app/
 COPY templates/ ./templates/
@@ -24,4 +25,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 
 ENV DATA_DIR=/data
 
-CMD ["python", "app/main.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7979", "--workers", "1", "--threads", "4", "--timeout", "120", "--chdir", "/app", "app.main:app"]

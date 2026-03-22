@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.1.0]
+
+### Added
+- Optional password protection via `MEDIASTARR_PASSWORD` environment variable
+- Login page (`/login`) with session-based authentication
+- CSRF protection for all write requests — browser fetch interceptor injects `X-CSRF-Token` header automatically
+- gunicorn as production server (replaces `python app/main.py`) — multi-threaded, more stable under load
+- `requirements.txt` with all dependencies (flask, requests, gunicorn)
+- `MEDIASTARR_PASSWORD` variable added to Unraid template and docker-compose files
+
+### Notes
+- Password protection is fully optional — if `MEDIASTARR_PASSWORD` is not set, Mediastarr behaves identically to v6.0.x
+- When password is set: dashboard, setup wizard, and all API endpoints require authentication
+- CSRF protection activates automatically when password is set
+
 ## [6.0.3]
 
 ### Improved (from community fork review)
