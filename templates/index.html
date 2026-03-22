@@ -303,7 +303,7 @@
         </svg>
         <div>
           <div class="logo-name">Media<span>starr</span></div>
-          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.1.0</span></div>
+          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.1.1</span></div>
         </div>
       </div>
     </div>
@@ -341,7 +341,7 @@
         <div class="lang-btn" onclick="setLang('en')" id="lang-en">🇬🇧 EN</div>
       </div>
       <button class="btn" style="width:100%;font-size:10px;padding:5px;margin-bottom:6px;color:var(--muted2)" onclick="resetSetup()" data-i18n="btn_reset_setup">⚙ Setup zurücksetzen</button>
-      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.1.0</span></a></div>
+      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.1.1</span></a></div>
     </div>
   </aside>
 
@@ -973,13 +973,24 @@ function showPage(name) {
   if (name === 'log') { document.getElementById('logBadge').textContent='0'; document.getElementById('logBadge').className='nav-badge'; }
   if (name === 'history') loadHistory();
   if (name === 'stats') loadStats();
+  if (name === 'settings') {
+    // Render whichever tab is currently active
+    const activeTab = document.querySelector('.tab-btn.active');
+    const tabName = activeTab ? (['general','instances','discord']
+      [Array.from(document.querySelectorAll('.tab-btn')).indexOf(activeTab)]) : 'general';
+    if (tabName === 'instances') renderSettingsInstances();
+  }
 }
 
 // ══ Tabs ══
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.className='tab-btn'+(['general','instances','discord'][i]===name?' active':''));
   document.querySelectorAll('.tab-pane').forEach(p => p.className='tab-pane'+(p.id===`tab-${name}`?' active':''));
-  if (name==='instances') renderSettingsInstances();
+  if (name==='instances') {
+    renderSettingsInstances();
+    // Retry once in case appState hasn't loaded yet
+    if (!appState.instances) setTimeout(renderSettingsInstances, 800);
+  }
 }
 
 // ══ Toggles ══
@@ -1030,6 +1041,10 @@ async function fetchState() {
     updateUI();
   } catch(e) {}
 }
+  // Re-render instances list if that tab is currently visible
+  if (document.getElementById('tab-instances')?.classList.contains('active')) {
+    renderSettingsInstances();
+  }
 
 function updateUI() {
   const s = appState;
@@ -1358,7 +1373,11 @@ async function resetSetup() {
 
 function renderSettingsInstances() {
   const el = document.getElementById('settings-inst-list');
-  if (!el || !appState.instances) return;
+  if (!el) return;
+  if (!appState.instances) {
+    el.innerHTML = `<div style="text-align:center;color:var(--muted2);font-size:12px;padding:16px">${currentLang==='de'?'Lade…':'Loading…'}</div>`;
+    return;
+  }
   if (!appState.instances.length) {
     el.innerHTML = currentLang==='de' ? '<div style="text-align:center;color:var(--muted2);font-size:12px;padding:16px">Keine Instanzen konfiguriert.</div>' : '<div style="text-align:center;color:var(--muted2);font-size:12px;padding:16px">No instances configured.</div>';
     return;

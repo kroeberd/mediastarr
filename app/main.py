@@ -206,7 +206,7 @@ MSGS = {
         "db_pruned":        "{n} abgelaufene Einträge bereinigt",
         "skipped_offline":  "Übersprungen – Offline oder deaktiviert",
         "auto_start":       "Hunt-Schleife gestartet",
-        "app_start":        "Mediastarr v6.1.0 gestartet",
+        "app_start":        "Mediastarr v6.1.1 gestartet",
         "setup_required":   "Einrichtung erforderlich – http://localhost:7979/setup",
         "missing":          "Fehlend",
         "upgrade":          "Upgrade",
@@ -220,7 +220,7 @@ MSGS = {
         "db_pruned":        "{n} expired entries pruned",
         "skipped_offline":  "Skipped – offline or disabled",
         "auto_start":       "Hunt loop started",
-        "app_start":        "Mediastarr v6.1.0 started",
+        "app_start":        "Mediastarr v6.1.1 started",
         "setup_required":   "Setup required – http://localhost:7979/setup",
         "missing":          "Missing",
         "upgrade":          "Upgrade",
@@ -1175,7 +1175,7 @@ def api_discord_test():
     active = len([i for i in CONFIG["instances"] if i.get("enabled")])
     fields = [
         {"name": f_status,  "value": f_ok, "inline": True},
-        {"name": f_ver,     "value": "v6.1.0", "inline": True},
+        {"name": f_ver,     "value": "v6.1.1", "inline": True},
         {"name": f_inst,    "value": str(active), "inline": True},
         {"name": f_enabled, "value": enabled_text, "inline": False},
     ]

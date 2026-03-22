@@ -1,58 +1,27 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Container version="2">
-
-  <!-- ══════════════════════════════════════════════════════
-       Mediastarr — Automated media search for Sonarr & Radarr
-       https://github.com/kroeberd/mediastarr
-       ══════════════════════════════════════════════════════ -->
-
   <Name>Mediastarr</Name>
   <Repository>kroeberd/mediastarr:latest</Repository>
   <Registry>https://hub.docker.com/r/kroeberd/mediastarr</Registry>
-  <GitHub>https://github.com/kroeberd/mediastarr</GitHub>
-  <Branch>main</Branch>
-
   <Network>bridge</Network>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-
   <Support>https://github.com/kroeberd/mediastarr/issues</Support>
-  <Project>https://github.com/kroeberd/mediastarr</Project>
+  <Project>https://mediastarr.de</Project>
+  <Icon>https://raw.githubusercontent.com/kroeberd/mediastarr/refs/heads/main/logos/logo.png</Icon>
   <Overview>
-    Automated missing-content and quality-upgrade search for Sonarr and Radarr.
+    Automated missing-content and quality-upgrade search for Sonarr and Radarr. Supports multiple instances with custom names (HD, 4K, Anime...), SQLite search history, configurable cooldown and daily limits, Discord webhook notifications, German and English UI, and a first-run browser wizard — no config file editing required.
 
-    Features:
-    - Multiple Sonarr/Radarr instances with custom names (HD, 4K, Anime …)
-    - Only Sonarr, only Radarr, or any mix — fully optional
-    - SQLite search history with per-item cooldown (configurable in days)
-    - Configurable daily search limit
-    - Random jitter on hunt intervals (minimum 15 minutes enforced)
-    - Discord webhook notifications with per-event toggles and rate-limit protection
-    - Periodic statistics report to Discord
-    - Sonarr search granularity: episode / season / full series
-    - Upgrade search on/off toggle
-    - Dark / Light / OLED themes
-    - German and English UI + logs
-    - First-run browser wizard — no config file editing required
+    Optional: set MEDIASTARR_PASSWORD to require login for the dashboard and API. Browser write requests are CSRF-protected automatically when a password is set.
 
-    Independent project, not affiliated with Huntarr.
+    Independent project. Not affiliated with Huntarr.
   </Overview>
+  <Description>
+    Automated media search for Sonarr and Radarr. Multi-instance, Discord notifications, SQLite history, optional password protection, DE/EN.
+  </Description>
   <Category>Downloaders: MediaApp:Other</Category>
   <WebUI>http://[IP]:[PORT:7979]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/kroeberd/mediastarr/main/mediastarr.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/kroeberd/mediastarr/main/static/icon.png</Icon>
-  <ExtraParams>--restart unless-stopped</ExtraParams>
-  <PostArgs/>
-  <CPUset/>
-  <DateInstalled/>
-  <DonateText/>
-  <DonateLink/>
-  <Requires>
-    At least one running Sonarr or Radarr instance reachable from the container.
-    Recommended: same Docker network as your Arr stack.
-  </Requires>
-
-  <!-- ── Port ────────────────────────────────────────────── -->
+  <TemplateURL>https://raw.githubusercontent.com/kroeberd/unraid-templates/main/templates/mediastarr.xml</TemplateURL>
   <Config
     Name="WebUI Port"
     Target="7979"
@@ -63,89 +32,74 @@
     Display="always"
     Required="true"
     Mask="false">7979</Config>
-
-  <!-- ── Data volume ──────────────────────────────────────── -->
   <Config
     Name="Data Directory"
     Target="/data"
     Default="/mnt/user/appdata/mediastarr"
     Mode="rw"
-    Description="Stores config.json and the SQLite search history database. Must be a persistent path — without this, the setup wizard restarts on every container restart."
+    Description="Persistent storage for config.json and the SQLite search history database. Required — without this the setup wizard restarts on every container restart."
     Type="Path"
     Display="always"
     Required="true"
     Mask="false">/mnt/user/appdata/mediastarr</Config>
-
-  <!-- ══════════════════════════════════════════════════════
-       Optional environment variables.
-       Leave blank to use the first-run wizard instead.
-       ══════════════════════════════════════════════════════ -->
-
   <Config
-    Name="Sonarr API Key"
+    Name="Sonarr API Key (optional)"
     Target="SONARR_API_KEY"
     Default=""
-    Mode=""
-    Description="Optional: Sonarr API key for automatic first-run setup. Find it in Sonarr → Settings → General → Security → API Key. If both SONARR_API_KEY and RADARR_API_KEY are set, the wizard is skipped."
+    Mode="rw"
+    Description="Optional: pre-configure Sonarr to skip the setup wizard. Find in Sonarr → Settings → General → Security → API Key."
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="true"></Config>
-
+    Mask="true"/>
   <Config
-    Name="Sonarr URL"
+    Name="Sonarr URL (optional)"
     Target="SONARR_URL"
-    Default="http://sonarr:8989"
-    Mode=""
-    Description="Optional: Sonarr URL (used only with SONARR_API_KEY)."
+    Default=""
+    Mode="rw"
+    Description="Optional: Sonarr URL. Only used when SONARR_API_KEY is also set. Use the IP or hostname reachable from this container, e.g. http://192.168.1.100:8989"
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="false">http://sonarr:8989</Config>
-
+    Mask="false"/>
   <Config
-    Name="Radarr API Key"
+    Name="Radarr API Key (optional)"
     Target="RADARR_API_KEY"
     Default=""
-    Mode=""
-    Description="Optional: Radarr API key for automatic first-run setup. Find it in Radarr → Settings → General → Security → API Key."
+    Mode="rw"
+    Description="Optional: pre-configure Radarr to skip the setup wizard. Find in Radarr → Settings → General → Security → API Key."
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="true"></Config>
-
+    Mask="true"/>
   <Config
-    Name="Radarr URL"
+    Name="Radarr URL (optional)"
     Target="RADARR_URL"
-    Default="http://radarr:7878"
-    Mode=""
-    Description="Optional: Radarr URL (used only with RADARR_API_KEY)."
+    Default=""
+    Mode="rw"
+    Description="Optional: Radarr URL. Only used when RADARR_API_KEY is also set. Use the IP or hostname reachable from this container, e.g. http://192.168.1.100:7878"
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="false">http://radarr:7878</Config>
-
+    Mask="false"/>
   <Config
-    Name="Data Directory (env)"
-    Target="DATA_DIR"
-    Default="/data"
-    Mode=""
-    Description="Internal container path for the data directory. Change only if you know what you are doing."
-    Type="Variable"
-    Display="advanced"
-    Required="false"
-    Mask="false">/data</Config>
-
-
-  <Config
-    Name="Dashboard Password"
+    Name="Dashboard Password (optional)"
     Target="MEDIASTARR_PASSWORD"
     Default=""
-    Mode=""
-    Description="Optional: if set, the Mediastarr dashboard and API require login. Browser write actions are CSRF-protected. Recommended when the WebUI is reachable beyond a trusted LAN."
+    Mode="rw"
+    Description="Optional: if set, the dashboard and API require login with this password. Browser write actions are CSRF-protected automatically. Recommended when the WebUI is reachable outside a trusted LAN."
     Type="Variable"
     Display="advanced"
     Required="false"
-    Mask="true"></Config>
-
+    Mask="true"/>
+  <Config
+    Name="Timezone"
+    Target="TZ"
+    Default="Europe/Berlin"
+    Mode="rw"
+    Description="Container timezone. Used for all timestamps in the UI and logs. Example: Europe/Berlin, America/New_York, UTC"
+    Type="Variable"
+    Display="advanced"
+    Required="false"
+    Mask="false">Europe/Berlin</Config>
 </Container>

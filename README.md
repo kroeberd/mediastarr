@@ -10,7 +10,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-kroeberd%2Fmediastarr-orange?logo=github)](https://github.com/kroeberd/mediastarr)
 [![Docker Hub](https://img.shields.io/docker/pulls/kroeberd/mediastarr?label=Docker%20Pulls&logo=docker)](https://hub.docker.com/r/kroeberd/mediastarr)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v6.1.0-ff6b2b)](https://github.com/kroeberd/mediastarr/releases)
+[![Version](https://img.shields.io/badge/Version-v6.1.1-ff6b2b)](https://github.com/kroeberd/mediastarr/releases)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865f2?logo=discord&logoColor=white)](https://discord.gg/8Vb9cj4ksv)
 
 </div>
@@ -267,7 +267,7 @@ GET  /api/timezones                # Verfügbare Zeitzonen
 
 ## 📜 Changelog
 
-### v6.1.0
+### v6.1.1
 - Multi-Instanz: Sonarr + Radarr beliebig kombinierbar, frei benennbar
 - Instanzen direkt in Einstellungen hinzufügen/umbenennen/löschen
 - Zufällige Item-Auswahl pro Zyklus für gleichmäßige Abdeckung

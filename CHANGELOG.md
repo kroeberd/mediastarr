@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.1.1]
+
+### Fixed
+- Settings → Instances tab: list showed "Lade..." permanently and never rendered instances
+- Root cause 1: `renderSettingsInstances()` returned early when `appState.instances` was undefined (race condition on first load)
+- Root cause 2: `showPage('settings')` never called `renderSettingsInstances()` — only `switchTab('instances')` did
+- Root cause 3: No re-render triggered when `fetchState()` completed while the Instances tab was open
+- Fixes: loading placeholder instead of silent bail-out, `showPage` now renders the active tab, `fetchState` re-renders the list when tab is visible, `switchTab` retries once if appState not ready yet
+
 ## [6.1.0]
 
 ### Added
