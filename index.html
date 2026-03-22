@@ -30,9 +30,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5vw;height:64px;di
 .lang-btn:hover,.lang-btn.active{border-color:rgba(255,107,43,.4);color:var(--acc)}
 
 /* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;position:relative}
-.hero::after{content:'';position:absolute;top:40%;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse,rgba(255,107,43,.06) 0%,transparent 65%);pointer-events:none;z-index:-1}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border:1px solid rgba(255,107,43,.3);border-radius:100px;background:rgba(255,107,43,.07);color:var(--acc);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px;animation:fadeUp .6s ease both}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 5vw 80px;position:relative;z-index:1}
+.hero::after{content:'';position:absolute;top:20%;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(255,107,43,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border:1px solid rgba(255,107,43,.3);border-radius:100px;background:rgba(255,107,43,.07);color:var(--acc);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px;animation:fadeUp .6s ease both;position:relative;z-index:2}
 .hero-badge span{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .hero-title{font-family:var(--disp);font-size:clamp(52px,8vw,96px);font-weight:800;line-height:1.02;letter-spacing:-2px;color:#fff;margin-bottom:24px;animation:fadeUp .7s .1s ease both}
@@ -181,7 +181,6 @@ span[data-lang].show{display:inline}
     <div class="nav-logo-text">Media<span>starr</span></div>
   </a>
   <ul class="nav-links">
-    <li><a href="#why" data-de="Warum" data-en="Why">Why</a></li>
     <li><a href="#features" data-de="Features" data-en="Features">Features</a></li>
     <li><a href="#install" data-de="Installation" data-en="Install">Install</a></li>
     <li><a href="#discord">Discord</a></li>
@@ -196,7 +195,10 @@ span[data-lang].show{display:inline}
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-badge"><span></span>v6.2.0 — Open Source</div>
+  <div class="hero-badge"><span></span>
+    <span data-lang="en" class="show">v6.2.0 — Open Source</span>
+    <span data-lang="de">v6.2.0 — Open Source</span>
+  </div>
   <h1 class="hero-title">
     <span data-lang="en" class="show">Hunt what's<br><span style="color:var(--acc)">missing.</span></span>
     <span data-lang="de">Such was<br><span style="color:var(--acc)">fehlt.</span></span>
@@ -403,108 +405,6 @@ span[data-lang].show{display:inline}
   </div>
 </section>
 
-<!-- COMPARISON -->
-<section style="padding:100px 5vw;max-width:1200px;margin:0 auto" id="why">
-
-  <div class="section-label reveal" id="why-label">Why Mediastarr</div>
-  <h2 class="section-title reveal" id="why-title">Built right.<br>From scratch.</h2>
-  <p class="section-sub reveal" id="why-sub">In February 2026, the most popular *arr automation tool was shut down overnight after a public security audit exposed critical vulnerabilities. Mediastarr was built with security as a foundation — not an afterthought.</p>
-
-  <!-- Incident box -->
-  <div class="reveal" style="background:rgba(255,77,77,.05);border:1px solid rgba(255,77,77,.2);border-radius:14px;padding:28px 32px;margin-bottom:20px;display:flex;gap:24px;align-items:flex-start">
-    <div style="font-size:28px;flex-shrink:0">🔓</div>
-    <div>
-      <div style="font-family:var(--disp);font-size:17px;font-weight:700;color:#ff4d4d;margin-bottom:8px" id="inc-title">What happened — February 2026</div>
-      <div style="color:var(--mu2);font-size:13px;line-height:1.75" id="inc-body">
-        A public security audit of Huntarr v9.4.2 uncovered 21 vulnerabilities — 7 critical, 6 high.
-        The most severe: a single unauthenticated HTTP request to <code style="background:rgba(255,77,77,.1);padding:1px 6px;border-radius:4px;color:#ff4d4d">POST /api/settings/general</code> returned every API key for every connected *arr app in cleartext — Sonarr, Radarr, Prowlarr, Lidarr — with no login required.
-        Additional findings included full account takeover via unauthenticated 2FA enrollment and the ability to rewrite the entire configuration without any session.
-        Shortly after the report was posted to Reddit, the Huntarr GitHub repository, subreddit and Discord were taken offline. The project is no longer maintained.
-      </div>
-    </div>
-  </div>
-
-  <!-- Forks box -->
-  <div class="reveal" style="background:rgba(245,200,66,.04);border:1px solid rgba(245,200,66,.15);border-radius:14px;padding:22px 32px;margin-bottom:48px">
-    <div style="font-family:var(--disp);font-size:15px;font-weight:700;color:#f5c842;margin-bottom:8px" id="fork-title">⚠ What about the forks?</div>
-    <div style="color:var(--mu2);font-size:13px;line-height:1.75" id="fork-body">
-      Several community forks appeared after the shutdown. They fix specific findings from the audit — but they inherit the same codebase and the same development process.
-      As the original security researcher noted: <em style="color:var(--tx)">"Fixing 21 specific findings doesn't fix the process that created them. Without code review, without basic automated testing, without anyone who understands security fundamentals actually reviewing what ships — the next batch of features will introduce the next batch of vulnerabilities."</em>
-      Mediastarr was built independently, from scratch, before and after these events — with security practices embedded from day one.
-    </div>
-  </div>
-
-  <!-- Comparison table -->
-  <div class="reveal" style="background:var(--bg2);border:1px solid var(--brd);border-radius:14px;overflow:hidden;margin-bottom:20px">
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead>
-        <tr style="border-bottom:1px solid var(--brd)">
-          <th style="text-align:left;padding:14px 24px;color:var(--mu2);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.8px;width:44%" id="th-feature">Feature / Property</th>
-          <th style="text-align:center;padding:14px 20px;color:#ff4d4d;font-weight:700;font-size:12px;width:28%" id="th-other">Huntarr / Forks</th>
-          <th style="text-align:center;padding:14px 20px;color:var(--green);font-weight:700;font-size:12px;width:28%">Mediastarr</th>
-        </tr>
-      </thead>
-      <tbody id="cmp-tbody">
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,77,77,.03)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r0-f">Project status</td>
-          <td style="text-align:center;padding:13px 20px;color:#ff4d4d;font-size:12px" id="r0-o">✗ Abandoned / unmaintained forks</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r0-m">✓ Actively maintained</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,77,77,.03)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r1-f">Unauthenticated API access</td>
-          <td style="text-align:center;padding:13px 20px;color:#ff4d4d;font-size:12px" id="r1-o">✗ All endpoints accessible without login</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r1-m">✓ Auth on all write routes</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,77,77,.03)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r2-f">API keys in responses</td>
-          <td style="text-align:center;padding:13px 20px;color:#ff4d4d;font-size:12px" id="r2-o">✗ Returned in cleartext, unauthenticated</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r2-m">✓ Never exposed in state</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r3-f">CSRF protection</td>
-          <td style="text-align:center;padding:13px 20px;color:#ff4d4d;font-size:12px" id="r3-o">✗</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r3-m">✓ Token on all write requests</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r4-f">Config file permissions</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r4-o">Default container permissions</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r4-m">✓ chmod 0600 on every save</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r5-f">Scope</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r5-o">Sonarr, Radarr, Lidarr, Readarr, Whisparr, Prowlarr…</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r5-m">✓ Sonarr + Radarr — focused</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r6-f">IMDb filter</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r6-o">—</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r6-m">✓</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r7-f">Target resolution filter</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r7-o">—</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r7-m">✓</td>
-        </tr>
-        <tr style="border-bottom:1px solid rgba(255,255,255,.04)">
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r8-f">Discord notifications</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r8-o">✓ via Apprise</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r8-m">✓ 6 events, native webhook</td>
-        </tr>
-        <tr>
-          <td style="padding:13px 24px;color:var(--tx);font-weight:500" id="r9-f">Language</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--mu2);font-size:12px" id="r9-o">English only</td>
-          <td style="text-align:center;padding:13px 20px;color:var(--green);font-size:12px" id="r9-m">✓ DE + EN, full UI & logs</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="reveal" style="text-align:center;font-size:11px;color:var(--mu);padding:0 0 8px" id="src-note">
-    Security findings based on the public audit at <a href="https://github.com/rfsbraz/huntarr-security-review" target="_blank" rel="noopener noreferrer" style="color:var(--mu2)">github.com/rfsbraz/huntarr-security-review</a> (Feb 2026).
-  </div>
-
-</section>
-
-
 <!-- FOOTER -->
 <footer>
   <a href="#" class="footer-logo">Media<span>starr</span></a>
@@ -539,110 +439,6 @@ function setLang(lang) {
   // Nav buttons
   document.getElementById('btn-en').classList.toggle('active', lang === 'en');
   document.getElementById('btn-de').classList.toggle('active', lang === 'de');
-
-  // ── Why / Comparison section ──
-  const _cmpT = {
-    'why-label':  {en:'Why Mediastarr', de:'Warum Mediastarr'},
-    'why-title':  {en:'Built right.<br>From scratch.', de:'Von Grund auf richtig.<br>Von Anfang an.'},
-    'why-sub':    {en:'In February 2026, the most popular *arr automation tool was shut down overnight after a public security audit exposed critical vulnerabilities. Mediastarr was built with security as a foundation — not an afterthought.',
-                   de:'Im Februar 2026 wurde das beliebteste *arr-Automatisierungstool über Nacht abgeschaltet, nachdem ein öffentliches Sicherheitsaudit kritische Schwachstellen aufdeckte. Mediastarr wurde mit Sicherheit als Fundament gebaut — nicht als nachträglicher Gedanke.'},
-    'inc-title':  {en:'What happened — February 2026', de:'Was passierte — Februar 2026'},
-    'inc-body':   {en:'A public security audit of Huntarr v9.4.2 uncovered 21 vulnerabilities — 7 critical, 6 high. The most severe: a single unauthenticated HTTP request to <code style="background:rgba(255,77,77,.1);padding:1px 6px;border-radius:4px;color:#ff4d4d">POST /api/settings/general</code> returned every API key for every connected *arr app in cleartext — Sonarr, Radarr, Prowlarr, Lidarr — with no login required. Additional findings included full account takeover via unauthenticated 2FA enrollment and the ability to rewrite the entire configuration without any session. Shortly after the report was posted to Reddit, the Huntarr GitHub repository, subreddit and Discord were taken offline. The project is no longer maintained.',
-                   de:'Ein öffentliches Sicherheitsaudit von Huntarr v9.4.2 deckte 21 Schwachstellen auf — 7 kritisch, 6 hoch. Die schwerwiegendste: Eine einzelne unauthentifizierte HTTP-Anfrage an <code style="background:rgba(255,77,77,.1);padding:1px 6px;border-radius:4px;color:#ff4d4d">POST /api/settings/general</code> gab jeden API-Key jeder verbundenen *arr-App im Klartext zurück — ohne Login. Weitere Funde umfassten vollständige Account-Übernahme über unauthentifizierte 2FA-Einrichtung. Kurz nach Veröffentlichung des Reddit-Berichts wurden GitHub-Repo, Subreddit und Discord gelöscht. Das Projekt wird nicht mehr gepflegt.'},
-    'fork-title': {en:'⚠ What about the forks?', de:'⚠ Was ist mit den Forks?'},
-    'fork-body':  {en:'Several community forks appeared after the shutdown. They fix specific findings from the audit — but they inherit the same codebase and the same development process. As the original security researcher noted: <em style="color:var(--tx)">"Fixing 21 specific findings doesn't fix the process that created them. Without code review, without basic automated testing, without anyone who understands security fundamentals actually reviewing what ships — the next batch of features will introduce the next batch of vulnerabilities."</em> Mediastarr was built independently, from scratch, before and after these events — with security practices embedded from day one.',
-                   de:'Nach der Abschaltung entstanden mehrere Community-Forks. Sie beheben einzelne Befunde des Audits — erben aber dieselbe Codebasis und denselben Entwicklungsprozess. Wie der Sicherheitsforscher treffend schrieb: <em style="color:var(--tx)">"21 konkrete Findings zu fixen behebt nicht den Prozess, der sie erzeugt hat. Ohne Code-Reviews, ohne automatisierte Tests, ohne jemanden mit Sicherheits-Grundlagen — wird das nächste Feature-Batch die nächste Lücke mitbringen."</em> Mediastarr entstand unabhängig, von Grund auf neu — mit eingebetteten Sicherheitspraktiken von Tag eins.'},
-    'th-feature': {en:'Feature / Property', de:'Feature / Eigenschaft'},
-    'th-other':   {en:'Huntarr / Forks', de:'Huntarr / Forks'},
-    'r0-f':{en:'Project status',              de:'Projektstatus'},
-    'r0-o':{en:'✗ Abandoned / unmaintained forks', de:'✗ Aufgegeben / ungepflegte Forks'},
-    'r0-m':{en:'✓ Actively maintained',       de:'✓ Aktiv gepflegt'},
-    'r1-f':{en:'Unauthenticated API access',  de:'Unauthentifizierter API-Zugriff'},
-    'r1-o':{en:'✗ All endpoints without login', de:'✗ Alle Endpunkte ohne Login erreichbar'},
-    'r1-m':{en:'✓ Auth on all write routes',  de:'✓ Auth auf allen Schreib-Routen'},
-    'r2-f':{en:'API keys in responses',       de:'API-Keys in Antworten'},
-    'r2-o':{en:'✗ Returned in cleartext, unauthenticated', de:'✗ Im Klartext, unauthentifiziert abrufbar'},
-    'r2-m':{en:'✓ Never exposed in state',    de:'✓ Nie im State enthalten'},
-    'r3-f':{en:'CSRF protection',             de:'CSRF-Schutz'},
-    'r3-o':{en:'✗ None',                      de:'✗ Keiner'},
-    'r3-m':{en:'✓ Token on all write requests', de:'✓ Token bei allen Schreibanfragen'},
-    'r4-f':{en:'Config file permissions',     de:'Konfigurationsdatei-Rechte'},
-    'r4-o':{en:'Default container permissions', de:'Standard-Container-Rechte'},
-    'r4-m':{en:'✓ chmod 0600 on every save',  de:'✓ chmod 0600 bei jedem Speichern'},
-    'r5-f':{en:'Scope',                       de:'Scope'},
-    'r5-o':{en:'Sonarr, Radarr, Lidarr, Readarr, Whisparr, Prowlarr…', de:'Sonarr, Radarr, Lidarr, Readarr, Whisparr, Prowlarr…'},
-    'r5-m':{en:'✓ Sonarr + Radarr — focused', de:'✓ Sonarr + Radarr — fokussiert'},
-    'r6-f':{en:'IMDb filter',                 de:'IMDb-Filter'},
-    'r6-o':{en:'—',                           de:'—'},
-    'r6-m':{en:'✓',                           de:'✓'},
-    'r7-f':{en:'Target resolution filter',    de:'Zielauflösungsfilter'},
-    'r7-o':{en:'—',                           de:'—'},
-    'r7-m':{en:'✓',                           de:'✓'},
-    'r8-f':{en:'Discord notifications',       de:'Discord-Benachrichtigungen'},
-    'r8-o':{en:'✓ via Apprise',               de:'✓ via Apprise'},
-    'r8-m':{en:'✓ 6 events, native webhook',  de:'✓ 6 Events, nativer Webhook'},
-    'r9-f':{en:'Language',                    de:'Sprache'},
-    'r9-o':{en:'English only',                de:'Nur Englisch'},
-    'r9-m':{en:'✓ DE + EN, full UI & logs',   de:'✓ DE + EN, vollständig'},
-    'src-note': {en:'Security findings based on the public audit at <a href="https://github.com/rfsbraz/huntarr-security-review" target="_blank" rel="noopener noreferrer" style="color:var(--mu2)">github.com/rfsbraz/huntarr-security-review</a> (Feb 2026).',
-                 de:'Sicherheitsbefunde basieren auf dem öffentlichen Audit unter <a href="https://github.com/rfsbraz/huntarr-security-review" target="_blank" rel="noopener noreferrer" style="color:var(--mu2)">github.com/rfsbraz/huntarr-security-review</a> (Feb. 2026).'},
-  };
-  Object.entries(_cmpT).forEach(([id, t]) => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = t[lang] !== undefined ? t[lang] : t.en;
-  });
-
-  // Comparison section
-  const cmp = {
-    'why-label':      {en:'Why Mediastarr',       de:'Warum Mediastarr'},
-    'why-title':      {en:'Built right, from scratch.', de:'Von Grund auf richtig gebaut.'},
-    'why-sub':        {en:'Mediastarr is an independent project — no legacy code, no security shortcuts, no bloat.',
-                       de:'Mediastarr ist ein eigenständiges Projekt — kein Legacy-Code, keine Sicherheitsabkürzungen, kein Overhead.'},
-    'other-title':    {en:'Other tools',           de:'Andere Tools'},
-    'other-1':        {en:'Original project abandoned after critical security vulnerabilities were disclosed publicly in early 2026 — repo deleted, Discord shut down',
-                       de:'Originalprojekt aufgegeben nachdem kritische Sicherheitslücken 2026 öffentlich wurden — Repo gelöscht, Discord geschlossen'},
-    'other-2':        {en:'API keys for Sonarr, Radarr and all *arr apps exposed to anyone on the network — no authentication required to read or overwrite config',
-                       de:'API-Keys für Sonarr, Radarr und alle *arr Apps für jeden im Netzwerk einsehbar — keine Authentifizierung zum Lesen oder Überschreiben der Konfiguration'},
-    'other-3':        {en:'Community forks inherit the same codebase and security posture — fixing individual vulnerabilities doesn't fix the process that created them',
-                       de:'Community-Forks erben dieselbe Codebasis und Sicherheitslage — einzelne Lücken zu schließen behebt nicht den Prozess, der sie erzeugte'},
-    'other-4':        {en:'Broad scope (Sonarr, Radarr, Lidarr, Readarr, Whisparr) — more moving parts, larger attack surface, slower fixes',
-                       de:'Breiter Scope (Sonarr, Radarr, Lidarr, Readarr, Whisparr) — mehr Teile, größere Angriffsfläche, langsamere Fixes'},
-    'other-5':        {en:'English only — no German UI', de:'Nur Englisch — kein deutsches Interface'},
-    'ms-1':           {en:'Actively maintained, independent project — built from scratch, no inherited technical debt',
-                       de:'Aktiv gepflegt, eigenständiges Projekt — von Grund auf neu, kein geerbter technischer Schulden'},
-    'ms-2':           {en:'API keys never exposed in state responses — CSRF protection, optional password auth, session hardening, config.json set 0600',
-                       de:'API-Keys nie in State-Antworten — CSRF-Schutz, optionaler Passwortschutz, Session-Hardening, config.json auf 0600'},
-    'ms-3':           {en:'Focused on Sonarr & Radarr only — smaller attack surface, faster development, easier to audit',
-                       de:'Fokus auf Sonarr & Radarr — kleinere Angriffsfläche, schnellere Entwicklung, leichter zu prüfen'},
-    'ms-4':           {en:'Input validation and whitelists on every endpoint — SSRF protection, SQL parameterization, XSS escaping',
-                       de:'Input-Validierung und Whitelists an jedem Endpunkt — SSRF-Schutz, SQL-Parametrisierung, XSS-Escaping'},
-    'ms-5':           {en:'Full German & English UI, logs and Discord messages — community Discord for support',
-                       de:'Vollständige DE/EN-UI, Logs und Discord-Nachrichten — Community Discord für Support'},
-    'th-feature':     {en:'Feature',              de:'Feature'},
-    'th-other':       {en:'Other tools',           de:'Andere Tools'},
-    'row-maintained': {en:'Actively maintained',   de:'Aktiv gepflegt'},
-    'row-maintained-other': {en:'✗ Abandoned',     de:'✗ Aufgegeben'},
-    'row-auth':       {en:'Auth / access protection', de:'Auth / Zugriffsschutz'},
-    'row-auth-other': {en:'✗ Critical CVEs',       de:'✗ Kritische CVEs'},
-    'row-apikeys':    {en:'API keys protected',    de:'API-Keys geschützt'},
-    'row-apikeys-other': {en:'✗ Exposed in responses', de:'✗ In Antworten sichtbar'},
-    'row-multi':      {en:'Multiple instances',    de:'Mehrere Instanzen'},
-    'row-multi-other':{en:'✓',                     de:'✓'},
-    'row-imdb':       {en:'IMDb filter',           de:'IMDb-Filter'},
-    'row-imdb-other': {en:'—',                     de:'—'},
-    'row-res':        {en:'Target resolution filter', de:'Zielauflösungsfilter'},
-    'row-res-other':  {en:'—',                     de:'—'},
-    'row-discord':    {en:'Discord notifications', de:'Discord-Benachrichtigungen'},
-    'row-discord-other': {en:'✓ via Apprise',      de:'✓ via Apprise'},
-    'row-lang':       {en:'German language UI',    de:'Deutsches Interface'},
-    'row-lang-other': {en:'✗',                     de:'✗'},
-    'row-wizard':     {en:'Browser setup wizard',  de:'Browser-Einrichtungsassistent'},
-    'row-wizard-other': {en:'✓',                   de:'✓'},
-  };
-  Object.entries(cmp).forEach(([id, t]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = t[lang] || t.en;
-  });
 
   // Headlines with line breaks need innerHTML
   const ft = document.getElementById('features-title');
