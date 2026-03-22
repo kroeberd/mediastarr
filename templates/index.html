@@ -1039,12 +1039,12 @@ async function fetchState() {
     const r = await fetch('/api/state');
     appState = await r.json();
     updateUI();
+    // Re-render instances list if that tab is currently visible
+    if (document.getElementById('tab-instances')?.classList.contains('active')) {
+      renderSettingsInstances();
+    }
   } catch(e) {}
 }
-  // Re-render instances list if that tab is currently visible
-  if (document.getElementById('tab-instances')?.classList.contains('active')) {
-    renderSettingsInstances();
-  }
 
 function updateUI() {
   const s = appState;
