@@ -1,0 +1,42 @@
+/*
+  Mediastarr theme template
+
+  Add new themes to the <style> block in templates/index.html.
+
+  1. Replace "your-theme-id" with a kebab-case theme id (e.g. "catppuccin")
+  2. Replace the variable values below
+  3. Add a matching theme button to the theme switcher in sidebar-bottom
+  4. Add the theme id to ALLOWED_THEMES in app/main.py
+  5. Update the T dict in both DE and EN with the theme label
+
+  Copy the button template:
+
+  <div class="theme-btn theme-your-theme-id" onclick="setTheme('your-theme-id')">
+    <span class="theme-swatch" style="background:#your-accent"></span>
+    Your Theme
+  </div>
+*/
+
+[data-theme="your-theme-id"] {
+  --bg:        #000000;
+  --bg2:       #111111;
+  --surface:   #1a1a1a;
+  --border:    #2a2a2a;
+  --border2:   #3a3a3a;
+  --text:      #f5f5f5;
+  --muted:     #9a9a9a;
+  --muted2:    #b8b8b8;
+  --accent:    #00bcd4;
+  --accent-g:  #67e8f9;
+  --accent-rgb: 0,188,212;
+  --blue:      #60a5fa;
+  --blue-rgb:  96,165,250;
+  --green:     #34d399;
+  --green-rgb: 52,211,153;
+  --yellow:    #fbbf24;
+  --red:       #f87171;
+  --red-rgb:   248,113,113;
+  --muted-rgb: 154,154,154;
+  --shadow:    0 4px 24px rgba(0,0,0,0.45);
+  --scanline:  rgba(255,255,255,0.012);
+}

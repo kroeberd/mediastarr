@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.3.7] — 2026-03-22
+
+### Changed
+- Page switching now uses class-based visibility (`content-page` / `page-visible`) instead of inline `style.display` writes — cleaner layout state, fixes edge cases where `display:grid` was not restored correctly on some mobile browsers
+- Stats page refresh check updated to match class-based visibility
+
+### Added
+- `theme-template.css` added to repo as developer documentation for adding custom themes
+
 ## [6.3.6] — 2026-03-22
 
 ### Fixed

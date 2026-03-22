@@ -83,6 +83,11 @@
     .nav-badge { background: var(--accent); color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 100px; display: none; }
     .nav-badge.visible { display: block; }
 
+    /* ── Page visibility (class-based) ── */
+    .content-page { display: none !important; }
+    .content-page.page-visible { display: grid !important; }
+    .content.content-page { display: none !important; }
+    .content.content-page.page-visible { display: grid !important; }
     /* ── Theme Switcher ── */
     .sidebar-bottom { padding: 14px 12px; border-top: 1px solid var(--border); }
     .theme-row { display: flex; gap: 4px; margin-bottom: 8px; }
@@ -328,7 +333,7 @@
         </svg>
         <div>
           <div class="logo-name">Media<span>starr</span></div>
-          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.3.6</span></div>
+          <div class="logo-sub">Hunt Engine <span style="color:var(--accent);font-weight:700">v6.3.7</span></div>
         </div>
       </div>
     </div>
@@ -373,7 +378,7 @@
         <div class="lang-btn" onclick="setLang('en')" id="lang-en">🇬🇧 EN</div>
       </div>
       <button class="btn" style="width:100%;font-size:10px;padding:5px;margin-bottom:6px;color:var(--muted2)" onclick="resetSetup()" data-i18n="btn_reset_setup">⚙ Setup zurücksetzen</button>
-      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.3.6</span></a></div>
+      <div class="version-tag"><a href="https://github.com/kroeberd/mediastarr" target="_blank" style="text-decoration:none"><span style="background:rgba(255,107,43,.15);border:1px solid rgba(255,107,43,.4);border-radius:4px;padding:2px 8px;color:#ff6b2b;font-size:10px;font-weight:600">v6.3.7</span></a></div>
     </div>
   </aside>
 
@@ -410,7 +415,7 @@
     </div>
 
     <!-- ══ DASHBOARD ══ -->
-    <div id="page-dashboard" class="content" style="display:grid">
+    <div id="page-dashboard" class="content content-page page-visible">
       <!-- Dynamic instance cards — filled by renderInstanceCards() -->
       <div id="instance-cards" class="service-cards">
         <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:20px">Lade Instanzen...</div>
@@ -451,7 +456,7 @@
     </div>
 
     <!-- ══ SETTINGS ══ -->
-    <div id="page-settings" class="content" style="display:none;grid-template-columns:1fr">
+    <div id="page-settings" class="content content-page">
       <div class="card settings-card">
         <div class="tabs-row">
           <div class="tab-btn active" onclick="switchTab('general')" data-i18n="tab_general">Allgemein</div>
@@ -759,7 +764,7 @@
     </div>
 
     <!-- ══ HISTORY ══ -->
-    <div id="page-history" class="content" style="display:none;grid-template-columns:1fr;align-content:start;gap:10px">
+    <div id="page-history" class="content content-page">
       <div class="hist-controls">
         <button class="btn btn-now" onclick="loadHistory()" data-i18n="btn_refresh">↺ Aktualisieren</button>
         <button class="btn btn-stop" onclick="confirmClear('all')" data-i18n="btn_clear_all">🗑 Alle löschen</button>
@@ -786,14 +791,14 @@
     </div>
 
     <!-- ══ LOG ══ -->
-    <div id="page-log" class="content" style="display:none;grid-template-columns:1fr">
+    <div id="page-log" class="content content-page">
       <div class="card log-card" style="min-height:500px">
         <div class="card-header"><div class="card-title" data-i18n="log">Aktivitätslog</div><button class="btn" style="font-size:10px;padding:3px 8px" onclick="clearLog()" data-i18n="btn_clear">Leeren</button></div>
         <div class="log-scroll" id="logScrollFull" style="max-height:600px"><div class="log-empty">Waiting for activity...</div></div>
       </div>
     </div>
   <!-- ══ STATS PAGE ══ -->
-  <div id="page-stats" class="content" style="display:none;grid-template-columns:1fr 1fr;grid-template-rows:auto">
+  <div id="page-stats" class="content content-page">
 
     <!-- KPI Row -->
     <div class="stats-grid" style="grid-column:1/-1">
@@ -1127,19 +1132,16 @@ function applyLang() {
   if (mvEl) mvEl.textContent = isDE ? 'Fehlend vs. Upgrade' : 'Missing vs. Upgrade';
   // st-today-sub handled in renderStats
   // Re-render stats if visible (updates type bar labels)
-  if (document.getElementById('page-stats')?.style.display !== 'none') {
+  if (document.getElementById('page-stats')?.classList.contains('page-visible')) {
     if (statsCache.hist) renderStats(statsCache.hist, statsCache.state);
   }
 }
 
 // ══ Pages ══
 function showPage(name) {
-  ['dashboard','settings','history','log','stats'].forEach(p => {
-    const el = document.getElementById(`page-${p}`);
-    if (el) el.style.display = 'none';
-  });
+  document.querySelectorAll('.content-page').forEach(el => el.classList.remove('page-visible'));
   const pg = document.getElementById(`page-${name}`);
-  if (pg) pg.style.display = 'grid';
+  if (pg) pg.classList.add('page-visible');
   document.getElementById('pageTitle').textContent = t(name);
   document.querySelectorAll('.nav-item[data-page]').forEach(el => {
     el.className = 'nav-item' + (el.dataset.page === name ? ' active' : '');
