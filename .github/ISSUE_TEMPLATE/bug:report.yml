@@ -1,0 +1,67 @@
+# Inspired by Quasarr's bug report: https://github.com/rix1337/Quasarr/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml
+name: Bug report
+description: Create a bug report
+body:
+  - type: checkboxes
+    attributes:
+      label: Did you read the README?
+      description: Please read the <a href="https://github.com/kroeberd/mediastarr/blob/main/README.md">README</a> first.
+      options:
+        - label: I have read the README.
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Is this an existing issue?
+      description: Check <a href="https://github.com/kroeberd/mediastarr/issues?q=is%3Aissue">all issues</a> to prevent duplicates.
+      options:
+        - label: I confirm this is not a duplicate.
+          required: true
+  - type: checkboxes
+    attributes:
+      label: Latest Version of Mediastarr?
+      description: If this is not the latest version, please upgrade first and then check again.
+      options:
+        - label: I use the latest Version
+          required: true
+  - type: textarea
+    attributes:
+      label: Environment
+      description: Tell us about your setup
+      value: |
+        - Mediastarr version:
+        - Last working version:
+        - Type: [Docker/LXC/Manual]
+        - OS: [Docker/Windows/Linux/macOS]
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe all steps to reproduce the issue. Without these, noone can be able to help you!
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Error from the console/ui ect.
+      description: |
+        Add ALL messages from the console/ui ect. that correlate with your issue.
+#        If you can't see a log message that correlates with your issue, set the LOG environment variable to "TRACE".
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: config.json
+      description: |
+        To reproduce your issue we need to know about your setup.
+        IMPORTANT: Redact the API keys and the Discord webhook!
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: Add screenshots that show your issue (ideally log and UI e.g. of Radarr/Sonarr)
+    validations:
+      required: false
