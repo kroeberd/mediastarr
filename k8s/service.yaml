@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediastarr
+  namespace: mediastarr
+  labels:
+    app.kubernetes.io/name: mediastarr
+spec:
+  selector:
+    app.kubernetes.io/name: mediastarr
+  ports:
+    - name: http
+      port: 7979
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP
+  # Change to NodePort or LoadBalancer if you don't use an Ingress:
+  # type: NodePort
+  # nodePort: 30797   # optional fixed port (30000–32767)

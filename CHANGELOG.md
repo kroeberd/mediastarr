@@ -1,5 +1,18 @@
 # Changelog
 
+## [v7.1.7] — 2026-04-14
+
+### Added
+- **Kubernetes deployment** — new `k8s/` directory with production-ready manifests:
+  - `namespace.yaml` — dedicated `mediastarr` namespace
+  - `pvc.yaml` — 1 Gi PersistentVolumeClaim for `/data` (StorageClass configurable)
+  - `deployment.yaml` — single-replica Deployment (`strategy: Recreate` for SQLite safety) with liveness, readiness and startup probes on `/api/state`; resource requests/limits; `terminationGracePeriodSeconds: 30`; Secret-based password injection
+  - `service.yaml` — ClusterIP Service on port 7979
+  - `ingress.yaml` — optional Ingress with nginx/Traefik annotations and cert-manager TLS support
+  - `secret.yaml` — Secret template for `MEDIASTARR_PASSWORD`
+  - `kustomization.yaml` — deploy everything with a single `kubectl apply -k k8s/`
+- **Important:** `replicas: 1` is mandatory — SQLite does not support concurrent writers. The deployment strategy is `Recreate` (not `RollingUpdate`) to prevent two pods running simultaneously.
+
 ## [v7.1.6] — 2026-04-14
 
 ### Fixed

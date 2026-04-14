@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediastarr
+  namespace: mediastarr
+  labels:
+    app.kubernetes.io/name: mediastarr
+    app.kubernetes.io/version: "7.1.7"
+spec:
+  # SQLite does not support concurrent writers.
+  # Always keep replicas: 1.
+  replicas: 1
+  strategy:
+    type: Recreate   # not RollingUpdate — single-replica SQLite app
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mediastarr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mediastarr
+        app.kubernetes.io/version: "7.1.7"
+    spec:
+      # Graceful shutdown: give gunicorn time to finish the current cycle
+      terminationGracePeriodSeconds: 30
+
+      securityContext:
+        runAsNonRoot: false   # tini/gunicorn start as root, drop via gunicorn itself
+        fsGroup: 1000         # ensures /data volume is writable
+
+      containers:
+        - name: mediastarr
+          image: ghcr.io/kroeberd/mediastarr:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 7979
+              protocol: TCP
+
+          env:
+            - name: DATA_DIR
+              value: /data
+            - name: TZ
+              value: "UTC"   # change to your timezone, e.g. Europe/Berlin
+            # Uncomment to enable password protection (recommended):
+            # - name: MEDIASTARR_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: mediastarr-secret
+            #       key: MEDIASTARR_PASSWORD
+
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
+          # Liveness: restart if the app is completely unresponsive
+          livenessProbe:
+            httpGet:
+              path: /api/state
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          # Readiness: remove from service endpoints until the app is ready
+          readinessProbe:
+            httpGet:
+              path: /api/state
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Startup: give the app up to 60s on first boot
+          startupProbe:
+            httpGet:
+              path: /api/state
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12   # 5s × 12 = 60s max startup time
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mediastarr-data

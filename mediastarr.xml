@@ -10,7 +10,7 @@
   <Project>https://mediastarr.de</Project>
   <Icon>https://raw.githubusercontent.com/kroeberd/mediastarr/main/static/icon.png</Icon>
   <Overview>
-[b]Mediastarr v7.1.6[/b] — Automated missing-content and quality-upgrade search for Sonarr and Radarr.
+[b]Mediastarr v7.1.7[/b] — Automated missing-content and quality-upgrade search for Sonarr and Radarr.
 
 [b]Features:[/b]
 • Multi-instance: unlimited Sonarr + Radarr instances (HD, 4K, Anime, …)
@@ -34,7 +34,7 @@
 [b]Note:[/b] Independent project. Not affiliated with Huntarr or Sonarr/Radarr.
   </Overview>
   <Description>
-    Automated media search for Sonarr and Radarr. Multi-instance, IMDb/resolution filters, Discord webhook with rich embeds, SQLite history, optional password, DE/EN, v7.1.6.
+    Automated media search for Sonarr and Radarr. Multi-instance, IMDb/resolution filters, Discord webhook with rich embeds, SQLite history, optional password, DE/EN, v7.1.7.
   </Description>
   <Beta>False</Beta>
   <Category>Downloaders: MediaApp:Other</Category>
