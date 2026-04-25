@@ -1,5 +1,11 @@
 # Changelog
 
+## [v7.1.10] — 2026-04-25
+
+### Fixed
+- **Lidarr tab renders empty** — two bugs: (1) the tab pane had `style="display:none"` hardcoded inline, overriding the CSS `.tab-pane.active` mechanism used by all other tabs; (2) `switchTab()` was missing the `renderSettingsInstances('lidarr')` call so the instance list was never populated. Both fixed.
+- **README missing Lidarr** — Lidarr was not mentioned in the feature tables or roadmap. Added to both EN and DE feature tables and roadmap.
+
 ## [v7.1.9] — 2026-04-25
 
 ### Added — Lidarr integration EXPERIMENTAL

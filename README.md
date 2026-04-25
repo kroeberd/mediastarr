@@ -71,6 +71,7 @@ The live demo runs a fully interactive mock of the Mediastarr UI — dashboard, 
 | 🆕 Update notifications | Dashboard badge + sidebar indicator + Discord webhook when new version available |
 | 🔒 Security | CodeQL hardened ping endpoints — exception data never exposed in API responses |
 | 💬 Tooltips | Native browser tooltips on all settings inputs and action buttons |
+| 🎵 Lidarr ⚠ | Lidarr integration (EXPERIMENTAL) — missing album search, upgrade search, deep-link to artist |
 
 ---
 
@@ -217,7 +218,7 @@ curl -X POST http://your-server:7979/api/webhook/trigger \
 - [x] Tag-based filtering per instance *(v7.0.5)*
 - [x] Separate Discord webhooks for Sonarr/Radarr *(v7.0.5)*
 - [x] Webhook trigger endpoint *(v7.0.5)*
-- [x] Config export/import, update notifications, CodeQL hardening, tooltips *(v7.1.2–v7.1.9)*
+- [x] Config export/import, update notifications, CodeQL hardening, tooltips *(v7.1.2–v7.1.10)*
 - [x] Tagging of searched items in Sonarr/Radarr *(v7.0.4)*
 - [x] API key censoring in logs *(v7.1.0)*
 - [x] Stalled download monitor *(v7.1.0)*
@@ -410,7 +411,7 @@ curl -X POST http://dein-server:7979/api/webhook/trigger \
 - [x] Tag-basierter Filter pro Instanz *(v7.0.5)*
 - [x] Separate Discord-Webhooks für Sonarr/Radarr *(v7.0.5)*
 - [x] Webhook-Trigger-Endpunkt *(v7.0.5)*
-- [x] Config-Export/Import, Update-Benachrichtigungen, CodeQL-Härtung, Tooltips *(v7.1.2–v7.1.9)*
+- [x] Config-Export/Import, Update-Benachrichtigungen, CodeQL-Härtung, Tooltips *(v7.1.2–v7.1.10)*
 - [x] Tagging von durchsuchten Elementen *(v7.0.4)*
 - [x] API-Key-Zensierung in Logs *(v7.1.0)*
 - [x] Stalled-Download-Monitor *(v7.1.0)*
