@@ -849,6 +849,7 @@
           <div class="tab-btn active" onclick="switchTab('general')" data-i18n="tab_general">Allgemein</div>
           <div class="tab-btn" onclick="switchTab('sonarr')">📺 Sonarr</div>
           <div class="tab-btn" onclick="switchTab('radarr')">🎬 Radarr</div>
+          <div class="tab-btn" onclick="switchTab('lidarr')">🎵 Lidarr <span style="font-size:9px;background:rgba(245,200,66,0.2);border:1px solid rgba(245,200,66,0.4);color:var(--yellow);border-radius:4px;padding:1px 5px;vertical-align:middle" data-i18n="lbl_experimental">EXPERIMENTAL</span></div>
           <div class="tab-btn" onclick="switchTab('discord')" data-i18n="tab_discord">💬 Discord</div>
           <div class="tab-btn" onclick="switchTab('console-tab')" data-i18n="tab_console">🖥 Console</div>
         </div>
@@ -1194,7 +1195,30 @@
             <button class="btn btn-start" onclick="showAddForm('radarr')" data-i18n="lbl_new_radarr">+ Radarr hinzufügen</button>
           </div>
         </div>
-<div class="tab-pane" id="tab-discord">
+
+        <!-- ══ LIDARR TAB ══ -->
+        <div class="tab-pane" id="tab-lidarr" style="display:none">
+          <div class="s-section" style="border-top:none;padding-top:0;margin-top:0">
+            <div class="s-section-title"><span class="s-section-icon">🎵</span><span data-de="Lidarr-Instanzen" data-en="Lidarr Instances">Lidarr Instances</span></div>
+            <div style="margin-bottom:14px;padding:10px 14px;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);border-radius:8px;font-size:11px;color:var(--yellow)">
+              ⚠ <strong data-i18n="lbl_experimental">EXPERIMENTAL</strong> — <span data-de="Lidarr-Unterstützung ist experimentell. Die Lidarr-API kann abweichen. Bitte Fehler auf GitHub melden." data-en="Lidarr support is experimental. The Lidarr API may behave differently. Please report issues on GitHub.">Lidarr support is experimental. Please report issues on GitHub.</span>
+            </div>
+            <div id="settings-inst-list-lidarr"></div>
+            <button class="btn btn-start" style="margin-top:12px" onclick="addInstByType('lidarr')" data-i18n="btn_add_instance">+ Instanz hinzufügen</button>
+          </div>
+          <div class="s-section">
+            <div class="s-section-title"><span class="s-section-icon">📊</span><span data-de="Lidarr Limits" data-en="Lidarr Limits">Lidarr Limits</span></div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_lidarr_daily">Lidarr Tageslimit</label>
+                <input class="form-input" id="cfg-lidarr-daily" type="number" min="0" max="9999" value="0" oninput="_autosaveConfig()" title="Max Lidarr searches per day across all Lidarr instances. 0 = unlimited.">
+                <div class="form-hint" data-i18n="hint_lidarr_daily">0 = unbegrenzt. Gilt für alle Lidarr-Instanzen.</div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /tab-lidarr -->
+
+        <div class="tab-pane" id="tab-discord">
 
           <!-- ① Header strip: logo + status + master toggle -->
           <div class="dc-header-strip">
@@ -1651,7 +1675,7 @@
               <li>✅ <strong>v6.4.4</strong> — Maintenance windows, rich series embeds, Discord embed fixes</li>
               <li>✅ <strong>v6.4.5</strong> — Central VERSION file, Huntarr comparison text, homepage badge</li>
               <li>✅ <strong>v6.4.6</strong> — Console dual-output fix, startup version fix, per-instance upgrade toggle, improved logging, mobile language selector, help page redesign, stats layout fix</li>
-              <li>✅ <strong>v7.1.8</strong> — History: expandable rows, Deep-link Sonarr/Radarr, search duration, status icons; Jitter up to 24h</li>
+              <li>✅ <strong>v7.1.9</strong> — History: expandable rows, Deep-link Sonarr/Radarr, search duration, status icons; Jitter up to 24h</li>
               <li>✅ <strong>v7.1.7</strong> — Kubernetes deployment manifests (Deployment, Service, PVC, Ingress, kustomize)</li>
               <li>✅ <strong>v7.1.6</strong> — Bug #52 (dashboard mixed language: Tageslimit/Verlauf), font readability (Inter), Codex handover</li>
               <li>✅ <strong>v7.1.5</strong> — FAQ page (DE+EN, accordion, 11 Q&amp;As, language-aware)</li>
@@ -1689,6 +1713,7 @@
               <li>✅ <strong>v6.4.4</strong> — Wartungsfenster, reiche Serien-Embeds, Discord-Embed-Fixes</li>
               <li>✅ <strong>v6.4.5</strong> — Zentrale VERSION-Datei, Huntarr-Vergleichstext, Homepage-Badge</li>
               <li>✅ <strong>v6.4.6</strong> — Console-Dual-Output-Fix, Startup-Version-Fix, Upgrades pro Instanz, verbessertes Logging, Mobile Sprachauswahl, Hilfe-Seiten-Redesign, Statistik-Layout-Fix</li>
+              <li>✅ <strong>v7.1.9</strong> — Lidarr-Integration EXPERIMENTELL (fehlende Alben, Upgrades, Deep-Link, Tageslimit)</li>
               <li>✅ <strong>v7.1.8</strong> — History: aufklappbare Zeilen, Deep-Link Sonarr/Radarr, Suchdauer, Status-Icons; Jitter bis 24h</li>
               <li>✅ <strong>v7.1.7</strong> — Kubernetes-Deployment-Manifeste (Deployment, Service, PVC, Ingress, kustomize)</li>
               <li>✅ <strong>v7.1.6</strong> — Bug #52 (Dashboard Sprach-Mix: Tageslimit/Verlauf), Schriftlesbarkeit (Inter), Codex-Handover</li>
@@ -1772,7 +1797,7 @@
 <h3>📋 Changelog</h3>
           <div class="help-en">
 
-            <h4>v7.1.8 — 2026-04-05</h4>
+            <h4>v7.1.9 — 2026-04-05</h4>
             <ul>
               <li><strong>Changed</strong> — Settings redesign: tabs now use named sections with icon badges; form labels readable (no all-caps); inputs taller with focus ring; light theme sidebar/topbar white background fixed</li>
               <li><strong>Add</strong> — Dashboard update badge; sidebar version indicator; Discord "Update available" card with <code>notify_update</code> toggle; <code>/api/state</code> now includes <code>version</code> field</li>
@@ -2722,6 +2747,9 @@ const T = {
         console_autoscroll:'Auto-scroll',
         stat_tab_all:'Alle',
         lbl_daily_limit:'Tageslimit',
+        lbl_experimental:'EXPERIMENTELL',
+        lbl_lidarr_daily:'Lidarr Tageslimit',
+        hint_lidarr_daily:'0 = unbegrenzt. Gilt für alle Lidarr-Instanzen.',
         btn_reset_db:'Reset DB',
   },
   en: { dashboard:'Dashboard', settings:'Settings', history:'History', log:'Activity Log',
@@ -2856,6 +2884,9 @@ const T = {
         console_autoscroll:'Auto-scroll',
         stat_tab_all:'All',
         lbl_daily_limit:'Daily limit',
+        lbl_experimental:'EXPERIMENTAL',
+        lbl_lidarr_daily:'Lidarr daily limit',
+        hint_lidarr_daily:'0 = unlimited. Applies to all Lidarr instances.',
         btn_reset_db:'Reset DB',
   }
 };
@@ -3043,11 +3074,12 @@ function showPage(name) {
     const tabName = _ALL_TABS[idx] || 'general';
     if (tabName === 'sonarr') renderSettingsInstances('sonarr');
     if (tabName === 'radarr') renderSettingsInstances('radarr');
+    if (tabName === 'lidarr') renderSettingsInstances('lidarr');
   }
 }
 
 // ══ Tabs ══
-const _ALL_TABS = ['general','sonarr','radarr','discord','console-tab'];
+const _ALL_TABS = ['general','sonarr','radarr','lidarr','discord','console-tab'];
 function switchTab(name) {
   MSLog.debug('switchTab', name);
   // Scoped to #page-settings to avoid resetting help/stats tab buttons
@@ -3521,6 +3553,7 @@ async function saveConfig() {
     sonarr_search_mode:   el('cfg-sonarr-mode')?.value || 'season',
     sonarr_daily_limit:          getInt('cfg-sonarr-daily-limit', 0),
     radarr_daily_limit:          getInt('cfg-radarr-daily-limit', 0),
+    lidarr_daily_limit:          getInt('cfg-lidarr-daily', 0),
     upgrade_daily_limit:         getInt('cfg-upgrade-daily', 0),
     sonarr_upgrade_daily_limit:  getInt('cfg-sonarr-upgrade-daily', 0),
     radarr_upgrade_daily_limit:  getInt('cfg-radarr-upgrade-daily', 0),
@@ -3627,6 +3660,7 @@ function renderHistory() {
   const statusIcon = type => {
     if (!type) return '🔍';
     if (type.includes('upgrade')) return '⬆️';
+    if (type.includes('album'))   return '🎵';
     if (type.includes('movie'))   return '🎬';
     return '📺';
   };
@@ -3636,6 +3670,8 @@ function renderHistory() {
       'episode':         isDE ? 'Episode'          : 'Episode',
       'episode_upgrade': isDE ? 'Upgrade (Episode)': 'Upgrade (episode)',
       'movie':           isDE ? 'Film'              : 'Movie',
+      'album':           isDE ? 'Album'             : 'Album',
+      'album_upgrade':   isDE ? 'Album-Upgrade'     : 'Album upgrade',
       'movie_upgrade':   isDE ? 'Film-Upgrade'      : 'Movie upgrade',
       'season':          isDE ? 'Staffel'           : 'Season',
       'series':          isDE ? 'Serie'             : 'Series',
@@ -3770,7 +3806,7 @@ function renderSettingsInstances(type) {
   }
   const accentColor = type === 'sonarr' ? 'var(--blue)' : 'var(--accent)';
   const accentBg    = type === 'sonarr' ? 'rgba(77,156,255,.12)' : 'rgba(255,107,43,.12)';
-  const ico = type === 'sonarr' ? '📺' : '🎬';
+  const ico = type === 'sonarr' ? '📺' : type === 'lidarr' ? '🎵' : '🎬';
   el.innerHTML = typed.map(inst => {
     const stats = appState.inst_stats?.[inst.id] || {};
     const st  = stats.status || 'unknown';

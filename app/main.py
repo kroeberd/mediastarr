@@ -137,7 +137,7 @@ def _reconfigure_file_logging() -> None:
     )
 
 # ─── Constants ───────────────────────────────────────────────────────────────
-ALLOWED_TYPES       = frozenset({"sonarr","radarr"})
+ALLOWED_TYPES       = frozenset({"sonarr","radarr","lidarr"})
 ALLOWED_LANGUAGES   = frozenset({"de","en"})
 ALLOWED_ACTIONS     = frozenset({"start","stop","run_now"})
 ALLOWED_SCHEMES     = frozenset({"http","https"})
@@ -665,7 +665,7 @@ def _year(val):
 
 # ─── Version check ────────────────────────────────────────────────────────
 _VERSION_FILE    = pathlib.Path(__file__).parent.parent / "VERSION"
-_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.8"
+_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.9"
 _version_cache   = {"latest": None, "checked_at": 0.0}
 
 def check_latest_version() -> str | None:
@@ -715,6 +715,7 @@ DEFAULT_CONFIG = {
     "radarr_upgrade_daily_limit": 0,
     "sonarr_daily_limit":      0,    # global max searches/day across ALL Sonarr instances (0 = unlimited)
     "radarr_daily_limit":      0,    # global max searches/day across ALL Radarr instances (0 = unlimited)
+    "lidarr_daily_limit":      0,    # global max searches/day across ALL Lidarr instances (0 = unlimited)
     "cooldown_days":           7,
     "request_timeout":        30,   # seconds for arr API calls
     "jitter_max":            300,   # max random seconds added to interval (0=off, max 86400s = 24h)
@@ -1268,11 +1269,17 @@ def do_search(client: ArrClient, iid: str, item_type: str, item_id: int,
     _inst_url = inst_cfg.get("url", "").rstrip("/")
     _inst_type = inst_cfg.get("type", "sonarr")
     _is_movie  = item_type in ("movie", "movie_upgrade")
+    _is_album  = item_type in ("album", "album_upgrade")
     _item      = item_data or {}
-    # arr_id: native Sonarr/Radarr integer id for deep linking
+    # arr_id: native Sonarr/Radarr/Lidarr integer id for deep linking
     if _is_movie:
         _arr_id  = _item.get("id") or item_id
         _arr_url = f"{_inst_url}/movie/{_arr_id}" if _inst_url and _arr_id else None
+    elif _is_album:
+        _arr_id  = _item.get("id") or item_id
+        _artist  = (_item.get("artist") or {})
+        _art_id  = _artist.get("id")
+        _arr_url = f"{_inst_url}/artist/{_art_id}" if _inst_url and _art_id else None
     else:
         _series  = _item.get("series") or {}
         _arr_id  = _series.get("id") or _item.get("seriesId") or item_id
@@ -1450,6 +1457,97 @@ def _ep_title(ep: dict, lang: str) -> str:
     return f"{s_title} – {code}"
 
 # ─── Hunt: Sonarr ─────────────────────────────────────────────────────────────
+def hunt_lidarr_instance(inst: dict):
+    """Hunt missing albums in a Lidarr instance. EXPERIMENTAL."""
+    iid   = inst["id"]; name = inst["name"]
+    client = ArrClient(name, inst["url"], inst["api_key"])
+    stats  = STATE["inst_stats"][iid]
+    # Reset per-cycle action counters — keep found-counts from last cycle
+    for _k in ("missing_searched","upgrades_searched","skipped_cooldown","skipped_daily"):
+        stats[_k] = 0
+
+    logger.debug(f"🎵 [{name}] Lidarr hunt start (EXPERIMENTAL)")
+    ms_info(name, "🔄 Hunt start", "Lidarr [EXPERIMENTAL]")
+
+    # ── Missing albums ──────────────────────────────────────────────────────
+    try:
+        # Lidarr /api/v1/wanted/missing returns paginated missing albums
+        data   = client.get("wanted/missing", params={"pageSize": 2000, "sortKey": "albums.title"})
+        albums = data.get("records", []) if isinstance(data, dict) else data
+        random.shuffle(albums)
+        stats["missing_found"] = len(albums)
+        ms_info(name, "🎵 Missing albums", str(len(albums)))
+
+        searched = 0
+        for album in albums:
+            if STOP_EVENT.is_set() or searched >= CONFIG["max_searches_per_run"]:
+                break
+            album_id  = album.get("id")
+            artist    = album.get("artist", {}) or {}
+            art_name  = str(artist.get("artistName", "?"))[:60]
+            alb_title = str(album.get("title", "?"))[:60]
+            title     = f"{art_name} — {alb_title}"
+
+            ok, reason = should_search(iid, "album", album_id)
+            if not ok:
+                stats[f"skipped_{reason}"] += 1
+                if reason == "daily":
+                    log_act(name, msg("daily_limit", today=db.count_today(),
+                                      limit=CONFIG["daily_limit"]), "", "warning")
+                    break
+                continue
+
+            do_search(client, iid, "album", album_id, title,
+                      {"name": "AlbumSearch", "albumIds": [album_id]},
+                      item_data=album)
+            searched += 1
+            stats["missing_searched"] += 1
+
+    except Exception as e:
+        ms_error(name, "Lidarr missing search failed", str(e)[:120])
+        logger.exception(f"hunt_lidarr_instance [{name}] missing error")
+
+    # ── Cutoff unmet (upgrades) ─────────────────────────────────────────────
+    do_upgrades = CONFIG.get("search_upgrades", True) and inst.get("search_upgrades", False)
+    if not do_upgrades:
+        ms_info(name, "⬆️ Lidarr upgrades", "disabled — skipped")
+        return
+
+    try:
+        data   = client.get("wanted/cutoff", params={"pageSize": 2000})
+        albums = data.get("records", []) if isinstance(data, dict) else data
+        random.shuffle(albums)
+        stats["upgrades_found"] = len(albums)
+        ms_info(name, "🎵 Upgrade candidates", str(len(albums)))
+
+        searched_up = 0
+        for album in albums:
+            if STOP_EVENT.is_set() or searched_up >= CONFIG["max_searches_per_run"]:
+                break
+            album_id  = album.get("id")
+            artist    = album.get("artist", {}) or {}
+            art_name  = str(artist.get("artistName", "?"))[:60]
+            alb_title = str(album.get("title", "?"))[:60]
+            title     = f"{art_name} — {alb_title}"
+
+            ok, reason = should_search(iid, "album_upgrade", album_id)
+            if not ok:
+                stats[f"skipped_{reason}"] += 1
+                if reason == "daily":
+                    break
+                continue
+
+            do_search(client, iid, "album_upgrade", album_id, title,
+                      {"name": "AlbumSearch", "albumIds": [album_id]},
+                      item_data=album)
+            searched_up += 1
+            stats["upgrades_searched"] += 1
+
+    except Exception as e:
+        ms_error(name, "Lidarr upgrade search failed", str(e)[:120])
+        logger.exception(f"hunt_lidarr_instance [{name}] upgrade error")
+
+
 def hunt_sonarr_instance(inst: dict):
     iid   = inst["id"]; name = inst["name"]
     client = ArrClient(name, inst["url"], inst["api_key"])
@@ -2022,6 +2120,7 @@ def run_cycle():
                 ms_info("System", f"{itype.capitalize()} global daily limit reached", f"{type_today}/{type_limit}"); continue
             if inst["type"] == "sonarr":   hunt_sonarr_instance(inst)
             elif inst["type"] == "radarr": hunt_radarr_instance(inst)
+            elif inst["type"] == "lidarr": hunt_lidarr_instance(inst)
         log_act("System", msg("cycle_done", n=STATE["cycle_count"], today=db.count_today()), "", "info")
 
         return True

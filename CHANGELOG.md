@@ -1,5 +1,29 @@
 # Changelog
 
+## [v7.1.9] — 2026-04-25
+
+### Added — Lidarr integration EXPERIMENTAL
+- **Lidarr instance type** — add Lidarr instances alongside Sonarr and Radarr in Settings -> new Lidarr tab. The tab shows a prominent yellow EXPERIMENTAL warning; the tab button carries an EXPERIMENTAL badge.
+- **`hunt_lidarr_instance()`** — full hunt function: fetches missing albums via `GET /wanted/missing`, shuffles randomly, applies cooldown and daily limits, fires `AlbumSearch` commands. Upgrade search via `GET /wanted/cutoff` (enabled per-instance).
+- **Deep-link to Lidarr artist** — history rows for album searches link to `<lidarr_url>/artist/<id>`.
+- **`lidarr_daily_limit`** — new global config key (default 0 = unlimited), settable in the Lidarr settings tab.
+- **`ALLOWED_TYPES`** — expanded to include `lidarr`. Invalid types still rejected by API.
+- **History: album types** — status icon for `album` and `album_upgrade` item types; type labels translated DE/EN.
+- **i18n** — `lbl_experimental`, `lbl_lidarr_daily`, `hint_lidarr_daily` added. Coverage: 104/104 keys.
+
+### Functional tests (v7.1.9)
+| Test | Status |
+|---|---|
+| lidarr in ALLOWED_TYPES | OK |
+| hunt_lidarr_instance callable | OK |
+| Lidarr dispatch in run_cycle | OK |
+| lidarr_daily_limit in DEFAULT_CONFIG | OK |
+| Invalid type rejected by API | OK |
+| api_key not in /api/state | OK |
+| JS syntax | OK |
+| Python syntax | OK |
+| i18n 104/104 keys | OK |
+
 ## [v7.1.8] — 2026-04-17
 
 ### Added
