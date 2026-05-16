@@ -1675,6 +1675,7 @@
               <li>✅ <strong>v6.4.4</strong> — Maintenance windows, rich series embeds, Discord embed fixes</li>
               <li>✅ <strong>v6.4.5</strong> — Central VERSION file, Huntarr comparison text, homepage badge</li>
               <li>✅ <strong>v6.4.6</strong> — Console dual-output fix, startup version fix, per-instance upgrade toggle, improved logging, mobile language selector, help page redesign, stats layout fix</li>
+              <li>✅ <strong>v7.1.11</strong> — Subpath/Base-URL-Support (<code>MEDIASTARR_BASE_URL</code>, schließt #54)</li>
               <li>✅ <strong>v7.1.10</strong> — History: expandable rows, Deep-link Sonarr/Radarr, search duration, status icons; Jitter up to 24h</li>
               <li>✅ <strong>v7.1.7</strong> — Kubernetes deployment manifests (Deployment, Service, PVC, Ingress, kustomize)</li>
               <li>✅ <strong>v7.1.6</strong> — Bug #52 (dashboard mixed language: Tageslimit/Verlauf), font readability (Inter), Codex handover</li>
@@ -1713,6 +1714,7 @@
               <li>✅ <strong>v6.4.4</strong> — Wartungsfenster, reiche Serien-Embeds, Discord-Embed-Fixes</li>
               <li>✅ <strong>v6.4.5</strong> — Zentrale VERSION-Datei, Huntarr-Vergleichstext, Homepage-Badge</li>
               <li>✅ <strong>v6.4.6</strong> — Console-Dual-Output-Fix, Startup-Version-Fix, Upgrades pro Instanz, verbessertes Logging, Mobile Sprachauswahl, Hilfe-Seiten-Redesign, Statistik-Layout-Fix</li>
+              <li>✅ <strong>v7.1.11</strong> — Subpath/Base-URL-Support (<code>MEDIASTARR_BASE_URL</code>, schließt #54)</li>
               <li>✅ <strong>v7.1.10</strong> — Lidarr-Tab leer (display:none-Fix + renderSettingsInstances), README Lidarr ergänzt</li>
               <li>✅ <strong>v7.1.9</strong> — Lidarr-Integration EXPERIMENTELL (fehlende Alben, Upgrades, Deep-Link, Tageslimit)</li>
               <li>✅ <strong>v7.1.8</strong> — History: aufklappbare Zeilen, Deep-Link Sonarr/Radarr, Suchdauer, Status-Icons; Jitter bis 24h</li>
@@ -1798,7 +1800,7 @@
 <h3>📋 Changelog</h3>
           <div class="help-en">
 
-            <h4>v7.1.10 — 2026-04-05</h4>
+            <h4>v7.1.11 — 2026-04-05</h4>
             <ul>
               <li><strong>Changed</strong> — Settings redesign: tabs now use named sections with icon badges; form labels readable (no all-caps); inputs taller with focus ring; light theme sidebar/topbar white background fixed</li>
               <li><strong>Add</strong> — Dashboard update badge; sidebar version indicator; Discord "Update available" card with <code>notify_update</code> toggle; <code>/api/state</code> now includes <code>version</code> field</li>
@@ -3138,7 +3140,7 @@ function fmtDays(d) { return currentLang==='de' ? (d===1?'1 Tag':`${d} Tage`) : 
 // ══ Fetch & Update ══
 async function fetchState() {
   try {
-    const r = await fetch('/api/state');
+    const r = await fetch(BASE + '/api/state');
     appState = await r.json();
     MSLog.trace('fetchState ok, running=', appState.running);
     updateUI();
@@ -3527,7 +3529,7 @@ function clearLog() {
 
 // ══ API ══
 async function control(action) {
-  await fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  await fetch(BASE + '/api/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
   setTimeout(fetchState, 400);
 }
 
@@ -3586,7 +3588,7 @@ async function saveConfig() {
     log_max_mb:    parseInt(document.getElementById('cfg-log-max-mb')?.value)  || 5,
     log_backups:   parseInt(document.getElementById('cfg-log-backups')?.value) || 2,
   };
-  const r = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const r = await fetch(BASE + '/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
   const d = await r.json();
   if (d.ok) {
     _configDirty = false;
@@ -3627,7 +3629,7 @@ async function pingService(svc) {
 async function loadHistory() {
   document.getElementById('hist-table').innerHTML = `<div class="log-empty">${t('loading')}</div>`;
   try {
-    const r = await fetch('/api/history');
+    const r = await fetch(BASE + '/api/history');
     const d = await r.json();
     historyData = d.history || [];
     document.getElementById('hist-count').textContent = d.count || 0;
@@ -3785,8 +3787,8 @@ async function resetSetup() {
   showActionConfirm(
     currentLang === 'de' ? 'Setup zurücksetzen? Der Hunt wird gestoppt.' : 'Reset setup? The hunt will be stopped.',
     async () => {
-      await fetch('/api/setup/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-      window.location.href='/setup';
+      await fetch(BASE + '/api/setup/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+      window.location.href=(window._BASE_URL||'')+'/setup';
     }
   );
 }
@@ -3930,7 +3932,7 @@ async function addInstByType(type) {
     if (msg) { msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent = currentLang==='de' ? '✗ Alle Felder ausfüllen' : '✗ Fill in all fields'; }
     return;
   }
-  const r = await fetch('/api/instances', {
+  const r = await fetch(BASE + '/api/instances', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({name, type, url, api_key: key})
   });
@@ -4232,8 +4234,8 @@ let statsCache = {};
 async function loadStats() {
   try {
     const [histR, stateR] = await Promise.all([
-      fetch('/api/history/stats'),
-      fetch('/api/state')
+      fetch(BASE + '/api/history/stats'),
+      fetch(BASE + '/api/state')
     ]);
     const hist  = await histR.json();
     const state = await stateR.json();
@@ -4324,7 +4326,7 @@ function renderStats(hist, state) {
     { label:'Upgrade (Filme)',  value: allStats.reduce((a,s)=>a+(s.total||0)/8,0), color:'#c857ff' },
   ];
   // Build from actual history if available
-  fetch('/api/history').then(r=>r.json()).then(h=>{
+  fetch(BASE + '/api/history').then(r=>r.json()).then(h=>{
     const rows = h.history||[];
     const counts = {};
     rows.forEach(r => { counts[r.item_type]=(counts[r.item_type]||0)+1; });
@@ -4348,7 +4350,7 @@ function renderStats(hist, state) {
   }).catch(()=>{});
 
   // 24h timeline — bucket by hour using history timestamps
-  fetch('/api/history').then(r=>r.json()).then(h=>{
+  fetch(BASE + '/api/history').then(r=>r.json()).then(h=>{
     const rows = h.history||[];
     const buckets = new Array(24).fill(0);
     const now = new Date();
@@ -4593,7 +4595,7 @@ function togglePublicApi() {
   if (tog) tog.className = 'toggle' + (_publicApiState ? ' on' : '');
   if (lab) lab.textContent = t(_publicApiState ? 'on' : 'off');
   MSLog.info('togglePublicApi →', _publicApiState);
-  fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'},
+  fetch(BASE + '/api/config', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({public_api_state: _publicApiState})
   }).then(r => r.json()).then(d => {
     if (d.ok) showActionMessage(
@@ -4606,7 +4608,7 @@ function togglePublicApi() {
 
 async function exportConfig() {
   try {
-    const r = await fetch('/api/config/export');
+    const r = await fetch(BASE + '/api/config/export');
     if (!r.ok) { MSLog.error('exportConfig', r.status); return; }
     const blob = await r.blob();
     const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
@@ -4634,7 +4636,7 @@ async function importConfig(input) {
   const form = new FormData();
   form.append('file', file);
   try {
-    const r = await fetch('/api/config/import', {method:'POST', body: form,
+    const r = await fetch(BASE + '/api/config/import', {method:'POST', body: form,
       headers:{'X-CSRF-Token':_csrf_token_val||''}});
     const d = await r.json();
     if (msg) {
@@ -4701,7 +4703,7 @@ async function saveDc() {
   body.discord.sonarr_webhook_url = sonarrUrl || '';
   body.discord.radarr_webhook_url = radarrUrl || '';
 
-  const r = await fetch('/api/config', {
+  const r = await fetch(BASE + '/api/config', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(body)
   });
@@ -4726,7 +4728,7 @@ async function testDc() {
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent=dcL('saving'); }
   const saved = await saveDc();
   if (!saved) return;
-  const r = await fetch('/api/discord/test', {
+  const r = await fetch(BASE + '/api/discord/test', {
     method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
   });
   const d = await r.json();
@@ -4743,7 +4745,7 @@ async function statsNow() {
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent=dcL('saving'); }
   const saved = await saveDc();
   if (!saved) return;
-  const r = await fetch('/api/discord/stats', {
+  const r = await fetch(BASE + '/api/discord/stats', {
     method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'
   });
   const d = await r.json();
@@ -4759,7 +4761,7 @@ async function statsNow() {
 let _allTimezones = [];
 async function loadTimezones() {
   try {
-    const r = await fetch('/api/timezones');
+    const r = await fetch(BASE + '/api/timezones');
     const d = await r.json();
     if (d.ok) {
       _allTimezones = d.timezones || [];
@@ -4857,7 +4859,7 @@ async function saveLogLevel() {
   MSLog.setLevel(level);
   // Persist to backend (affects Docker console + file)
   try {
-    await fetch('/api/config', { method: 'POST',
+    await fetch(BASE + '/api/config', { method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
       body: JSON.stringify({ log_min_level: level }) });
     MSLog.info('LogLevel', `Level set to ${level} — backend + frontend synced`);
@@ -4871,7 +4873,7 @@ async function saveLogConfig() {
   const msg    = document.getElementById('log-action-msg');
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent = currentLang==='de' ? '⏳ Speichere…' : '⏳ Saving…'; }
   try {
-    const r = await fetch('/api/config', {method:'POST',headers:{'Content-Type':'application/json'},
+    const r = await fetch(BASE + '/api/config', {method:'POST',headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ log_max_mb: maxMb, log_backups: backups })});
     const d = await r.json();
     if (msg) {
@@ -4892,7 +4894,7 @@ async function testLogRotation() {
   const msg = document.getElementById('log-action-msg');
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent=currentLang==='de'?'⏳ Rotiere…':'⏳ Rotating…'; }
   try {
-    const r = await fetch('/api/log/rotate', {method:'POST'});
+    const r = await fetch(BASE + '/api/log/rotate', {method:'POST'});
     const d = await r.json();
     if (msg) {
       msg.style.color = d.ok ? 'var(--green)' : 'var(--red)';
@@ -4918,7 +4920,7 @@ async function loadLogStatus() {
   if (panel) panel.style.display = 'block';
   if (content) content.textContent = currentLang==='de' ? 'Lade…' : 'Loading…';
   try {
-    const r = await fetch('/api/log/status');
+    const r = await fetch(BASE + '/api/log/status');
     const d = await r.json();
     if (!content) return;
     if (!d.ok) { content.textContent = `✗ ${d.error}`; return; }
@@ -4997,7 +4999,7 @@ async function saveMaintenanceWindows() {
   const msg  = document.getElementById('maint-save-msg');
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent=currentLang==='de'?'⏳ Speichere…':'⏳ Saving…'; }
   try {
-    const r = await fetch('/api/config', {method:'POST',headers:{'Content-Type':'application/json'},
+    const r = await fetch(BASE + '/api/config', {method:'POST',headers:{'Content-Type':'application/json'},
       body: JSON.stringify({maintenance_windows: wins})});
     const d = await r.json();
     if (msg) {
@@ -5242,6 +5244,9 @@ setInterval(fetchState, 4000);
 setInterval(() => { if (document.getElementById('page-stats')?.classList.contains('page-visible')) loadStats(); }, 30000);
 </script>
 <script>
+    window._BASE_URL = {{ BASE_URL | tojson }};
+    const BASE = window._BASE_URL || '';
+
 const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
 const nativeFetch = window.fetch.bind(window);
 window.fetch = (resource, options = {}) => {

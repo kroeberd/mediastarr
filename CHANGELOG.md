@@ -1,5 +1,44 @@
 # Changelog
 
+## [v7.1.11] — 2026-05-16
+
+### Added — Subpath / Base URL support (closes #54)
+- **`MEDIASTARR_BASE_URL` environment variable** — run Mediastarr under a URL prefix for reverse-proxy setups, e.g. `MEDIASTARR_BASE_URL=/mediastarr` exposes the app at `https://example.com/mediastarr`.
+- Default remains `/` — existing installs require no changes.
+- When set, `werkzeug.middleware.proxy_fix.ProxyFix` is applied (trusts `X-Forwarded-For/Proto/Host/Prefix` headers) and `APPLICATION_ROOT` is configured automatically.
+- The prefix is normalised: `mediastarr`, `/mediastarr`, and `/mediastarr/` are all accepted and handled consistently.
+- `base_url` field added to `/api/state` response so the frontend can read the configured prefix at runtime.
+- All 22 frontend `fetch('/api/...')` calls in `index.html` now use `BASE + '/api/...'` where `BASE = window._BASE_URL || ''`.
+- `window._BASE_URL` is injected into all three templates (`index.html`, `setup.html`, `login.html`) via Jinja2 `{{ BASE_URL | tojson }}`.
+- `window.location.href` redirects updated to respect `_BASE_URL`.
+- Backend redirects (`/setup`, post-login) prefixed with `_BASE_URL`.
+
+### Example Docker Compose usage
+```yaml
+environment:
+  - MEDIASTARR_BASE_URL=/mediastarr
+```
+
+### Example nginx reverse proxy
+```nginx
+location /mediastarr/ {
+    proxy_pass http://mediastarr:7979/;
+    proxy_set_header X-Forwarded-Prefix /mediastarr;
+}
+```
+
+### Functional tests (v7.1.11)
+| Test | Status |
+|---|---|
+| `_BASE_URL` reads and normalises env var | ✅ |
+| `APPLICATION_ROOT` set on Flask app | ✅ |
+| `ProxyFix` applied when `BASE_URL` is set | ✅ |
+| `/api/state` returns `ok=True` and `base_url` field | ✅ |
+| `api_key` not leaked | ✅ |
+| `/api/history` works | ✅ |
+| Empty `BASE_URL` keeps default (no prefix) | ✅ |
+| Missing leading slash auto-corrected | ✅ |
+
 ## [v7.1.10] — 2026-04-25
 
 ### Fixed

@@ -257,6 +257,8 @@
 </div>
 
 <script>
+    window._BASE_URL = {{ BASE_URL | tojson }};
+
 let lang = 'en';
 let instances = [];  // [{id(temp), type, name, url, api_key, tested, version}]
 let nextTempId = 1;
@@ -469,7 +471,7 @@ async function testInst(id) {
   statusEl.textContent = lang === 'de' ? '⟳ teste...' : '⟳ testing...';
   statusEl.className = 'inst-status pending';
   try {
-    const r = await fetch('/api/setup/ping', {
+    const r = await fetch((window._BASE_URL||'') + '/api/setup/ping', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({type: inst.type, url: inst.url, api_key: inst.api_key})
     });
@@ -512,11 +514,11 @@ async function testWizardDiscord() {
   if (msg) { msg.style.display='block'; msg.style.color='var(--muted2)'; msg.textContent='⟳ Testing...'; }
   // Temporarily save URL then test
   try {
-    const saveR = await fetch('/api/config', {
+    const saveR = await fetch((window._BASE_URL||'') + '/api/config', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({discord:{enabled:true, webhook_url:url}})
     });
-    const testR = await fetch('/api/discord/test', {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const testR = await fetch((window._BASE_URL||'') + '/api/discord/test', {method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     const d = await testR.json();
     if (msg) {
       msg.style.color = d.ok ? 'var(--green)' : 'var(--red)';
@@ -601,7 +603,7 @@ async function finishSetup() {
     } : undefined,
   };
   try {
-    const r = await fetch('/api/setup/complete', {
+    const r = await fetch((window._BASE_URL||'') + '/api/setup/complete', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });

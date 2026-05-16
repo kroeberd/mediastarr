@@ -86,11 +86,24 @@ def decrypt_secret(value: str) -> str:
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.config["SECRET_KEY"] = os.environ.get("MEDIASTARR_SESSION_SECRET") or secrets.token_hex(32)
+
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"]   = os.environ.get("MEDIASTARR_SESSION_SECURE","").strip().lower() in {"1","true","yes","on"}
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
+
+# ── Base URL / subpath support (issue #54) ──────────────────────────────────
+_RAW_BASE = os.environ.get("MEDIASTARR_BASE_URL", "").strip().rstrip("/")
+_BASE_URL  = _RAW_BASE if _RAW_BASE.startswith("/") else ("/" + _RAW_BASE if _RAW_BASE else "")
+if _BASE_URL and _BASE_URL != "/":
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    app.config["APPLICATION_ROOT"] = _BASE_URL
+    app.config["PREFERRED_URL_SCHEME"] = "http"
+    logger.info(f"Base URL configured: {_BASE_URL}")
+else:
+    _BASE_URL = ""
 
 # Module-level reference so we can reconfigure without restart
 _file_handler: "logging.handlers.RotatingFileHandler | None" = None
@@ -665,7 +678,7 @@ def _year(val):
 
 # ─── Version check ────────────────────────────────────────────────────────
 _VERSION_FILE    = pathlib.Path(__file__).parent.parent / "VERSION"
-_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.10"
+_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.11"
 _version_cache   = {"latest": None, "checked_at": 0.0}
 
 def check_latest_version() -> str | None:
@@ -2258,7 +2271,7 @@ def login_page():
     # in redirect(). Map to hardcoded safe destinations only.
     # CodeQL py/url-redirection: never pass user input to redirect().
     # next_path is always a hardcoded string from a fixed tuple.
-    _ALLOWED_NEXT = ("/", "/setup")
+    _ALLOWED_NEXT = (_BASE_URL + "/", _BASE_URL + "/setup", "/", "/setup")
     _raw_next = request.args.get("next", "") or ""
     # Select hardcoded path — user value only used as lookup key, not as redirect target
     next_path = "/setup" if _raw_next == "/setup" else "/"
@@ -2293,10 +2306,14 @@ def logout():
     session.clear()
     return redirect(url_for("login_page"))
 
+@app.context_processor
+def inject_base_url():
+    return {"BASE_URL": _BASE_URL}
+
 @app.route("/")
 @_login_required
 def index():
-    if not CONFIG.get("setup_complete"): return redirect("/setup")
+    if not CONFIG.get("setup_complete"): return redirect(_BASE_URL + "/setup")
     return render_template("index.html", csrf_token=_csrf_token(), default_pw=(_PASSWORD == "change-me" and bool(_PASSWORD)), version=_CURRENT_VERSION)
 
 @app.route("/setup")
@@ -2504,7 +2521,7 @@ def api_state():
     for inst_s in instances_safe:
         inst_s["today_count"] = db.count_today_for_instance(inst_s["id"])
     return jsonify({
-        "version":_CURRENT_VERSION,"running":STATE["running"],"last_run":STATE["last_run"],
+        "ok":True,"version":_CURRENT_VERSION,"base_url":_BASE_URL,"running":STATE["running"],"last_run":STATE["last_run"],
         "next_run":STATE["next_run"],"cycle_count":STATE["cycle_count"],
         "total_searches":db.total_count(),"daily_count":today_n,
         "daily_limit":limit,"daily_remaining":max(0,limit-today_n) if limit>0 else None,
