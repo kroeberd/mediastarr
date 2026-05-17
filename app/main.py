@@ -96,12 +96,41 @@ logger = logging.getLogger(__name__)
 # ── Base URL / subpath support (issue #54) ──────────────────────────────────
 _RAW_BASE = os.environ.get("MEDIASTARR_BASE_URL", "").strip().rstrip("/")
 _BASE_URL  = _RAW_BASE if _RAW_BASE.startswith("/") else ("/" + _RAW_BASE if _RAW_BASE else "")
+# ── PrefixMiddleware: strips _BASE_URL from PATH_INFO, sets SCRIPT_NAME ─────
+# This is the correct approach — ProxyFix only reads headers from a real proxy
+# and does NOT strip the path prefix. Without stripping, Flask never matches
+# /mediastarr/login against the /login route and returns 404.
+class _PrefixMiddleware:
+    """WSGI middleware that strips a URL prefix and sets SCRIPT_NAME.
+    Flask then sees clean paths (/login, /api/state …) and url_for() uses
+    SCRIPT_NAME to generate correct absolute URLs automatically.
+    """
+    def __init__(self, wsgi_app, prefix: str):
+        self.app    = wsgi_app
+        self.prefix = prefix.rstrip("/")
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        # Accept both /mediastarr and /mediastarr/...
+        if path == self.prefix:
+            # Redirect bare prefix → prefix/ so Flask index route matches
+            def _redir(s, h): return start_response(s, h)
+            start_response("301 Moved Permanently",
+                           [("Location", self.prefix + "/"),
+                            ("Content-Length", "0")])
+            return [b""]
+        if path.startswith(self.prefix + "/"):
+            environ["PATH_INFO"]   = path[len(self.prefix):] or "/"
+            environ["SCRIPT_NAME"] = environ.get("SCRIPT_NAME", "") + self.prefix
+            return self.app(environ, start_response)
+        # Request is outside the prefix — 404
+        start_response("404 Not Found", [("Content-Type", "application/json")])
+        return [b'{"ok":false,"error":"Not found"}']
+
 if _BASE_URL and _BASE_URL != "/":
-    from werkzeug.middleware.proxy_fix import ProxyFix
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    app.wsgi_app = _PrefixMiddleware(app.wsgi_app, _BASE_URL)
     app.config["APPLICATION_ROOT"] = _BASE_URL
-    app.config["PREFERRED_URL_SCHEME"] = "http"
-    logger.info(f"Base URL configured: {_BASE_URL}")
+    logger.info(f"Base URL / prefix middleware configured: {_BASE_URL}")
 else:
     _BASE_URL = ""
 
@@ -678,7 +707,7 @@ def _year(val):
 
 # ─── Version check ────────────────────────────────────────────────────────
 _VERSION_FILE    = pathlib.Path(__file__).parent.parent / "VERSION"
-_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.11"
+_CURRENT_VERSION = _VERSION_FILE.read_text().strip() if _VERSION_FILE.exists() else "v7.1.12"
 _version_cache   = {"latest": None, "checked_at": 0.0}
 
 def check_latest_version() -> str | None:
@@ -960,13 +989,13 @@ def sec_headers(r):
     return r
 
 @app.errorhandler(400)
-def e400(e): return jsonify({"ok":False,"error":"Ungültige Anfrage"}),400
+def e400(e): return jsonify({"ok":False,"error":"Invalid request"}),400
 @app.errorhandler(404)
-def e404(e): return jsonify({"ok":False,"error":"Nicht gefunden"}),404
+def e404(e): return jsonify({"ok":False,"error":"Not found"}),404
 @app.errorhandler(405)
-def e405(e): return jsonify({"ok":False,"error":"Methode nicht erlaubt"}),405
+def e405(e): return jsonify({"ok":False,"error":"Method not allowed"}),405
 @app.errorhandler(500)
-def e500(e): logger.error(f"500:{e}"); return jsonify({"ok":False,"error":"Interner Serverfehler"}),500
+def e500(e): logger.error(f"500:{e}"); return jsonify({"ok":False,"error":"Internal server error"}),500
 
 # ─── *arr API Client ──────────────────────────────────────────────────────────
 
@@ -2430,7 +2459,7 @@ def api_instances_add():
 @_api_auth_required
 def api_instances_update(inst_id:str):
     inst = next((i for i in CONFIG["instances"] if i["id"]==inst_id), None)
-    if not inst: return jsonify({"ok":False,"error":"Nicht gefunden"}),404
+    if not inst: return jsonify({"ok":False,"error":"Not found"}),404
     d = request.get_json(silent=True) or {}
     if "name" in d:
         nm=safe_str(d["name"],40); ok,e=validate_name(nm)
@@ -2471,7 +2500,7 @@ def api_instances_update(inst_id:str):
 def api_instances_delete(inst_id:str):
     before = len(CONFIG["instances"])
     CONFIG["instances"] = [i for i in CONFIG["instances"] if i["id"]!=inst_id]
-    if len(CONFIG["instances"]) == before: return jsonify({"ok":False,"error":"Nicht gefunden"}),404
+    if len(CONFIG["instances"]) == before: return jsonify({"ok":False,"error":"Not found"}),404
     STATE["inst_stats"].pop(inst_id,None); save_config(CONFIG)
     return jsonify({"ok":True})
 
@@ -2492,7 +2521,7 @@ def api_instance_tags(inst_id: str):
 @_api_auth_required
 def api_instances_ping(inst_id:str):
     inst = next((i for i in CONFIG["instances"] if i["id"]==inst_id), None)
-    if not inst: return jsonify({"ok":False,"error":"Nicht gefunden"}),404
+    if not inst: return jsonify({"ok":False,"error":"Not found"}),404
     if not inst.get("api_key"): return jsonify({"ok":False,"msg":"Kein API Key"})
     # CodeQL py/stack-trace-exposure: exception data never flows to response.
     # _ping_result holds only safe allowlisted values.
@@ -2698,7 +2727,7 @@ def api_fenrus_status():
 def api_control():
     global hunt_thread
     d=request.get_json(silent=True) or {}; action=d.get("action")
-    if action not in ALLOWED_ACTIONS: return jsonify({"ok":False,"error":"Ungültige Aktion"}),400
+    if action not in ALLOWED_ACTIONS: return jsonify({"ok":False,"error":"Invalid action"}),400
     if action=="start" and not STATE["running"]:
         STOP_EVENT.clear(); hunt_thread=threading.Thread(target=hunt_loop,daemon=True); hunt_thread.start()
     elif action=="stop": STOP_EVENT.set()
@@ -2712,7 +2741,7 @@ def api_control():
 @_api_auth_required
 def api_config():
     d=request.get_json(silent=True)
-    if d is None: return jsonify({"ok":False,"error":"Ungültiges JSON"}),400
+    if d is None: return jsonify({"ok":False,"error":"Invalid JSON"}),400
     # Enforce minimum 15 minute interval
     # UI sends minutes, store as seconds internally
     raw_min = clamp_int(d.get("hunt_missing_delay", CONFIG["hunt_missing_delay"]//60), MIN_INTERVAL_MIN, 1440, CONFIG["hunt_missing_delay"]//60)

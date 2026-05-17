@@ -1,5 +1,28 @@
 # Changelog
 
+## [v7.1.12] — 2026-05-17
+
+### Fixed — Subpath routing (issue #54 follow-up)
+- **`/mediastarr/login` returned `{"error": "Nicht gefunden"}` (404)** — root cause: v7.1.11 used `werkzeug.middleware.proxy_fix.ProxyFix` which only reads `X-Forwarded-*` headers from a real upstream proxy. It does **not** strip the prefix from `PATH_INFO`. Flask therefore received `/mediastarr/login` and could not match it against the `/login` route, triggering the 404 handler. Fixed by replacing `ProxyFix` with a custom `_PrefixMiddleware` that:
+  1. Strips `_BASE_URL` from `PATH_INFO` (Flask sees `/login` instead of `/mediastarr/login`)
+  2. Sets `SCRIPT_NAME` to `_BASE_URL` (so `url_for()` auto-generates correct prefixed URLs)
+  3. Returns `301 Moved Permanently` for the bare prefix without trailing slash
+  4. Returns `404` for requests outside the prefix
+- **API error messages were in German** — 7 hardcoded German strings in `jsonify` error responses (`"Nicht gefunden"`, `"Ungültige Anfrage"`, `"Interner Serverfehler"`, `"Ungültige Aktion"`, `"Ungültiges JSON"`, etc.) translated to English.
+
+### Functional tests (v7.1.12)
+| Test | Status |
+|---|---|
+| `_PrefixMiddleware` replaces `ProxyFix` | ✅ |
+| `/mediastarr/login` routes to login page (not 404) | ✅ |
+| `/mediastarr/` reaches main page | ✅ |
+| `/mediastarr/api/state` returns `ok=True` | ✅ |
+| `base_url` field in `/api/state` response | ✅ |
+| `/mediastarr` (no trailing slash) → 301 redirect | ✅ |
+| Request outside prefix → 404 | ✅ |
+| No-prefix default still works | ✅ |
+| No-prefix `base_url` is empty string | ✅ |
+
 ## [v7.1.11] — 2026-05-16
 
 ### Added — Subpath / Base URL support (closes #54)
