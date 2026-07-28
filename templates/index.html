@@ -4591,21 +4591,35 @@ function applyDcLang() {
 let _publicApiState = false;
 
 function togglePublicApi() {
-  _publicApiState = !_publicApiState;
-  const tog = document.getElementById('tog-public-api');
-  const lab = document.getElementById('lab-public-api');
-  if (tog) tog.className = 'toggle' + (_publicApiState ? ' on' : '');
-  if (lab) lab.textContent = t(_publicApiState ? 'on' : 'off');
-  MSLog.info('togglePublicApi →', _publicApiState);
+  const next = !_publicApiState;
+  MSLog.info('togglePublicApi →', next);
   fetch(BASE + '/api/config', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({public_api_state: _publicApiState})
-  }).then(r => r.json()).then(d => {
-    if (d.ok) showActionMessage(
-      currentLang === 'de'
-        ? (_publicApiState ? '✓ /api/state ist jetzt öffentlich zugänglich (kein Login)' : '✓ /api/state erfordert jetzt Login')
-        : (_publicApiState ? '✓ /api/state is now publicly accessible (no login)' : '✓ /api/state now requires login'),
-      _publicApiState ? 'warning' : 'success', 5000);
-  }).catch(e => MSLog.error('togglePublicApi save failed', e));
+    body: JSON.stringify({public_api_state: next})
+  }).then(async r => {
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.ok) {
+      _publicApiState = next;
+      const tog = document.getElementById('tog-public-api');
+      const lab = document.getElementById('lab-public-api');
+      if (tog) tog.className = 'toggle' + (_publicApiState ? ' on' : '');
+      if (lab) lab.textContent = t(_publicApiState ? 'on' : 'off');
+      showActionMessage(
+        currentLang === 'de'
+          ? (_publicApiState ? '✓ /api/state ist jetzt öffentlich zugänglich (kein Login)' : '✓ /api/state erfordert jetzt Login')
+          : (_publicApiState ? '✓ /api/state is now publicly accessible (no login)' : '✓ /api/state now requires login'),
+        _publicApiState ? 'warning' : 'success', 5000);
+    } else {
+      MSLog.error('togglePublicApi save failed', d.error || r.status);
+      showActionMessage(
+        currentLang === 'de'
+          ? 'Speichern fehlgeschlagen — bitte neu einloggen und erneut versuchen'
+          : 'Save failed — please log in again and retry',
+        'error', 5000);
+    }
+  }).catch(e => {
+    MSLog.error('togglePublicApi save failed', e);
+    showActionMessage(currentLang === 'de' ? 'Speichern fehlgeschlagen' : 'Save failed', 'error', 5000);
+  });
 }
 
 async function exportConfig() {
